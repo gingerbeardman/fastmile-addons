@@ -20,7 +20,7 @@ Tested on: Nokia FastMile 5G Gateway 3.2, software **1.2202.00.0287**
 ## Requirements
 
 - **A root shell on the gateway.** How to get one is out of scope for this
-  project.
+  project. See [this blog post](https://blog.gingerbeardman.com/2026/11/06/extending-the-nokia-fastmile-5g-gateway-32/) for more information.
 - A Mac (or other Unix machine) with `curl`, `tar`, `python3` and
   `shasum`/`sha256sum`, to download packages and copy files to the router.
 - For the VPN: an AdGuard VPN subscription.

@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VPN — FastMile 5G Gateway</title>
+<style>
+  @font-face{font-family:NokiaPureHeadline;font-weight:400;font-display:swap;
+    src:url(/web_whw/NokiaPureHeadline_Regular.54599c8f5d2af85b.woff2) format("woff2")}
+  @font-face{font-family:NokiaPureHeadline;font-weight:700;font-display:swap;
+    src:url(/web_whw/NokiaPureHeadline_Bold.4850bce839d20086.woff2) format("woff2")}
+  :root{ --primary:#0168ff; --background:#f9f9f9; --accent:#dcdcdc; --sideMenu:#fff;
+         --nokiaFont:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         --title:NokiaPureHeadline,var(--nokiaFont); --line:rgba(102,102,102,.12); }
+  html,body{margin:0;min-height:100%}
+  body{background:var(--background);font-family:var(--nokiaFont);font-size:16px}
+  .sidenav{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--sideMenu);
+           padding-bottom:87px;box-sizing:border-box;overflow:hidden}
+  .logo{display:inline-flex;width:150px;height:28px;padding:36px 0 30px 24px}
+  .logo img{max-width:100%;max-height:100%;object-fit:contain}
+  .logout{position:fixed;bottom:0;width:219px;background:var(--sideMenu)}
+  .logout hr{margin:0 16px;border:0;border-top:1px solid #0000001f}
+  .logout-row{height:56px;padding-left:16px;display:flex;align-items:center}
+  .avatar{width:32px;height:32px}
+  .user{display:flex;flex-direction:column;padding-left:12px;font-size:14px;line-height:20px}
+  .user a{font-weight:600;color:#000;text-decoration:none}
+  .user a:hover{font-weight:700}
+  .lang{margin-left:auto;margin-right:16px;font:16px Roboto,"Helvetica Neue",sans-serif;
+        color:#000000de;display:flex;align-items:center;gap:12px}
+  .lang:after{content:"";border:5px solid transparent;border-top-color:#0000008a;
+              border-bottom:0;margin-top:2px}
+  .page{margin-left:220px;padding:39px 24px 55px;max-width:1160px;box-sizing:border-box}
+  .page-title{font-family:var(--title);font-weight:700;font-size:26px;line-height:32px;
+              color:#003;margin:0 0 30px}
+  .page-title span{font-weight:400}
+  .grid{display:grid;grid-template-columns:1fr 1fr;padding:8px 16px;background:#fff;
+        border-radius:16px;line-height:60px;margin-bottom:16px}
+  .k{color:#666;font-size:14px;border-bottom:1px solid var(--line)}
+  .v{display:flex;justify-content:flex-end;align-items:center;gap:8px;color:#333;
+     font-weight:700;font-size:14px;border-bottom:1px solid var(--line);
+     white-space:nowrap;overflow:hidden}
+  .note{grid-column:1/-1;color:#666;font-size:14px;line-height:20px;padding:14px 0;
+        border-bottom:1px solid var(--line)}
+  .box{width:305px;height:40px;box-sizing:border-box;border:1px solid #ccc;
+       border-radius:8px;padding:0 14px;font:400 14px var(--nokiaFont);color:#333;
+       background:#fff;outline:none}
+  .box:focus{border-color:var(--primary)}
+  select.box{padding:0 10px}
+  .dot{width:10px;height:10px;border-radius:50%;background:#ccc;flex:0 0 10px}
+  .dot.on{background:#6eb874}
+  .dot.warn{background:#e6a23c}
+  .dot.err{background:#e23b3b}
+  .switch{position:relative;display:inline-block;width:44px;height:25px;cursor:pointer}
+  .switch input{position:absolute;opacity:0;width:0;height:0}
+  .switch span{position:absolute;inset:0;border-radius:15px;background:var(--accent);
+               transition:background-color 80ms linear}
+  .switch span:before{content:"";position:absolute;width:19px;height:19px;left:5px;top:3px;
+    border-radius:50%;background:#fff;transition:transform 80ms linear;
+    box-shadow:0 2px 1px -1px #0003,0 1px 1px #00000024,0 1px 3px #0000001f}
+  .switch input:checked + span{background:var(--primary)}
+  .switch input:checked + span:before{transform:translateX(16px)}
+  .seg{display:inline-flex;border:1px solid var(--primary);border-radius:8px;overflow:hidden}
+  .seg label{cursor:pointer}
+  .seg input{position:absolute;opacity:0;width:0;height:0}
+  .seg span{display:block;padding:0 16px;line-height:34px;font-weight:500;font-size:14px;
+            color:var(--primary);background:#fff}
+  .seg input:checked + span{background:var(--primary);color:#fff}
+  .seg input:focus-visible + span{outline:2px solid var(--primary);outline-offset:-4px}
+  .devs{grid-column:1/-1;max-height:420px;overflow:auto;border-bottom:1px solid var(--line)}
+  .devs label{display:flex;align-items:center;gap:12px;min-height:44px;
+              border-bottom:1px solid var(--line);font-size:14px;color:#333;cursor:pointer}
+  .devs label:last-child{border-bottom:0}
+  .devs .nm{font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .devs .meta{color:#666;font-weight:400;font-variant-numeric:tabular-nums}
+  .devs.off{opacity:.45;pointer-events:none}
+  .add{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;line-height:normal;padding:10px 0;
+       border-bottom:1px solid var(--line)}
+  .add .box{width:200px}
+  .actions{grid-column:1/-1;line-height:normal;padding:10px 0 8px;text-align:center}
+  .save{display:inline-block;margin:0 6px;width:180px;height:40px;padding:8px 24px;border:0;
+        border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;
+        font:500 14px/16px var(--nokiaFont)}
+  .save.ghost{background:#fff;color:var(--primary);border:1px solid var(--primary)}
+  .save.small{width:auto;padding:8px 16px}
+  .save:disabled{background:var(--accent);color:#fff;border-color:var(--accent);cursor:default}
+  .status{display:block;min-height:18px;margin-top:8px;font-size:13px;color:#666}
+  .status.ok{color:#3a8a41} .status.err{color:#e23b3b}
+  .mono{font-variant-numeric:tabular-nums}
+</style>
+<link rel="stylesheet" href="/web_whw/fm-theme.css?v=12">
+<script src="/web_whw/fm-theme.js?v=3"></script>
+<script src="/web_whw/fm-menu.js?v=9"></script>
+</head>
+<body>
+<aside class="sidenav">
+  <div class="logo"><img src="/web_whw/assets/icons/Nokia.svg" alt="NOKIA"></div>
+  <div id="menu"></div>
+  <div class="logout">
+    <hr>
+    <div class="logout-row">
+      <img class="avatar" src="/web_whw/assets/icons/Avatar.svg" alt="">
+      <div class="user"><span>admin</span><a href="/web_whw/#/overview">Logout</a></div>
+      <span class="lang">English</span>
+    </div>
+  </div>
+</aside>
+<main class="page">
+  <div class="page-title"><span>Application /</span> VPN</div>
+  <div id="gate" class="grid" style="display:none">
+    <div class="note">Enter the admin password once. It is stored only in this
+      browser, so you won't be asked again.</div>
+    <div class="k">Admin password</div>
+    <div class="v"><input class="box" type="password" id="gpw" autocomplete="current-password"></div>
+    <div class="actions">
+      <button class="save" id="gbtn">Continue</button>
+      <span class="status" id="gmsg"></span>
+    </div>
+  </div>
+  <div id="panel" style="display:none">
+    <div class="grid">
+      <div class="note">AdGuard VPN for chosen devices or the whole home. The router's
+        own traffic always uses the normal connection. If the VPN drops, devices fall
+        back to the normal connection until it reconnects.</div>
+      <div class="k">Status</div>
+      <div class="v"><span id="stateDot" class="dot"></span><span id="stateTxt">…</span></div>
+      <div class="k">Tunnel address</div>
+      <div class="v mono" id="tunip">—</div>
+      <div class="k">Enable VPN</div>
+      <div class="v"><label class="switch"><input type="checkbox" id="enabled"><span></span></label></div>
+      <div class="k">Connection type</div>
+      <div class="v">
+        <div class="seg" role="radiogroup" aria-label="Connection type">
+          <label><input type="radio" name="mode" value="cli"><span>AdGuard app</span></label>
+          <label><input type="radio" name="mode" value="ipsec"><span>IPsec</span></label>
+        </div>
+      </div>
+      <div class="note" id="modeNote"></div>
+      <label class="k" for="location">Location</label>
+      <div class="v"><select class="box" id="location"></select></div>
+      <div class="k sortrow">Sort locations by</div>
+      <div class="v sortrow">
+        <div class="seg" role="radiogroup" aria-label="Sort locations by">
+          <label><input type="radio" name="sort" value="ping"><span>Ping</span></label>
+          <label><input type="radio" name="sort" value="alpha"><span>Country A–Z</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="k">Who uses the VPN</div>
+      <div class="v">
+        <div class="seg" role="radiogroup" aria-label="Who uses the VPN">
+          <label><input type="radio" name="scope" value="devices"><span>Chosen devices</span></label>
+          <label><input type="radio" name="scope" value="all"><span>Whole home</span></label>
+        </div>
+      </div>
+      <div class="note" id="scopeNote"></div>
+      <div class="devs" id="devices"></div>
+      <div class="add">
+        <input class="box" type="text" id="addip" placeholder="192.168.1.x" inputmode="decimal" aria-label="Add device by IP address">
+        <button class="save ghost small" id="addbtn">Add IP</button>
+      </div>
+      <div class="actions">
+        <button class="save" id="save">Save</button>
+        <span class="status" id="msg"></span>
+      </div>
+    </div>
+  </div>
+</main>
+<script src="/web_whw/assets/js/jsencrypt.min.js"></script>
+<script src="/web_whw/assets/js/sjcl.js"></script>
+<script src="/web_whw/assets/js/crypto_page.js"></script>
+<script src="/web_whw/fm-auth.js"></script>
+<script>
+  var $ = function (id) { return document.getElementById(id); };
+  FMMenu.render($("menu"));
+  var data = null, poll = null, dirty = false;
+  var SLOW = { nl: 1, fi: 1 };   // IPsec servers measured at ~5 Mbps per connection
+  var LAN = /^192\.168\.1\.([1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$/;
+
+  function radio(name) { var el = document.querySelector('input[name="' + name + '"]:checked'); return el ? el.value : ""; }
+  function setRadio(name, v) { var el = document.querySelector('input[name="' + name + '"][value="' + v + '"]'); if (el) el.checked = true; }
+
+  function setPill(txt, cls) {
+    $("stateTxt").textContent = txt;
+    $("stateDot").className = "dot" + (cls ? " " + cls : "");
+  }
+
+  function paintStatus(s) {
+    var where = s.connected_location || s.location || "";
+    var t = {
+      off: ["Off", ""],
+      connecting: ["Connecting…", "warn"],
+      connected: ["Connected · " + where, "on"],
+      fallback: ["Reconnecting · devices on normal connection", "warn"],
+      error: ["Error" + (s.error ? ": " + s.error : ""), "err"]
+    }[s.state] || [s.state || "Unknown", ""];
+    setPill(t[0], t[1]);
+    $("tunip").textContent = s.state === "connected" && s.tun_ip ? s.tun_ip : "—";
+  }
+
+  var SLOW_MS = 50;
+  function sortPref() {
+    try { return localStorage.getItem("fm_vpn_sort") === "alpha" ? "alpha" : "ping"; } catch (e) { return "ping"; }
+  }
+  function addGroup(sel, title, items, withCountry) {
+    if (!items.length) return;
+    var g = document.createElement("optgroup"); g.label = title;
+    items.forEach(function (l) {
+      var o = document.createElement("option");
+      o.value = l.id;
+      o.textContent = l.city + (withCountry && l.country !== l.city ? ", " + l.country : "") + (l.ping ? "  (" + l.ping + " ms)" : "");
+      g.appendChild(o);
+    });
+    sel.appendChild(g);
+  }
+
+  function fillLocations(mode, current) {
+    var sel = $("location"), list = (data.locations || {})[mode] || [];
+    sel.innerHTML = "";
+    if (mode === "cli") {
+      var f = document.createElement("option");
+      f.value = "fastest"; f.textContent = "Fastest available";
+      sel.appendChild(f);
+      var near = list.filter(function (l) { return (l.ping || 0) < SLOW_MS; });
+      var far = list.filter(function (l) { return (l.ping || 0) >= SLOW_MS; });
+      if (sortPref() === "ping") {
+        var byPing = function (a, b) { return (a.ping || 0) - (b.ping || 0) || a.city.localeCompare(b.city); };
+        addGroup(sel, "Under " + SLOW_MS + " ms", near.sort(byPing), true);
+        addGroup(sel, "Slower (" + SLOW_MS + " ms+)", far.sort(byPing), true);
+      } else {
+        // One group per country, countries A–Z, cities by ping inside each.
+        var groups = {};
+        list.forEach(function (l) { (groups[l.country] = groups[l.country] || []).push(l); });
+        Object.keys(groups).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (c) {
+          addGroup(sel, c, groups[c].sort(function (a, b) { return (a.ping || 0) - (b.ping || 0); }), false);
+        });
+      }
+    } else {
+      list.forEach(function (l) {
+        var o = document.createElement("option");
+        o.value = l.id; o.textContent = l.city + ", " + l.country + (SLOW[l.id] ? "  (slow)" : "");
+        sel.appendChild(o);
+      });
+    }
+    var want = (current || "").toLowerCase(), hit = false;
+    [].forEach.call(sel.options, function (o) {
+      if (!hit && (o.value.toLowerCase() === want || o.textContent.toLowerCase().indexOf(want) === 0)) { o.selected = true; hit = true; }
+    });
+    if (!hit && sel.options.length) sel.options[0].selected = true;
+    [].forEach.call(document.querySelectorAll(".sortrow"), function (el) { el.style.display = mode === "cli" ? "" : "none"; });
+    setRadio("sort", sortPref());
+    $("modeNote").textContent = mode === "cli"
+      ? "Uses AdGuard's own protocol, the fastest option. " + list.length + " locations; counts as one of your AdGuard devices."
+      : "Standard IPsec/IKEv2 to AdGuard's 5 router servers. Amsterdam and Helsinki are slow (about 5 Mbps per connection).";
+  }
+
+  function chosenIps() {
+    return [].filter.call(document.querySelectorAll("#devices input"), function (c) { return c.checked; })
+      .map(function (c) { return c.value; });
+  }
+
+  function addDeviceRow(box, ip, name, meta, checked) {
+    var lab = document.createElement("label");
+    var cb = document.createElement("input");
+    cb.type = "checkbox"; cb.value = ip; cb.checked = checked;
+    cb.onchange = function () { dirty = true; };
+    var nm = document.createElement("span"); nm.className = "nm"; nm.textContent = name;
+    var mt = document.createElement("span"); mt.className = "meta"; mt.textContent = meta;
+    lab.appendChild(cb); lab.appendChild(nm); lab.appendChild(mt);
+    box.appendChild(lab);
+  }
+
+  function fillDevices(s) {
+    var box = $("devices"), chosen = (s.devices || "").split(/\s+/).filter(Boolean), seen = {};
+    box.innerHTML = "";
+    (data.devices || []).slice().sort(function (a, b) {
+      return a.ip.split(".")[3] - b.ip.split(".")[3];
+    }).forEach(function (d) {
+      seen[d.ip] = 1;
+      var mac = (d.mac || "").toLowerCase();
+      var name = d.name && !/^unknown/i.test(d.name) ? d.name
+        : "Unknown device" + (mac.length >= 8 ? " (…" + mac.slice(-8) + ")" : "");
+      addDeviceRow(box, d.ip, name, d.ip + (d.type ? " · " + d.type : ""), chosen.indexOf(d.ip) >= 0);
+    });
+    chosen.forEach(function (ip) { if (!seen[ip]) addDeviceRow(box, ip, "Not connected now", ip, true); });
+    paintScope();
+  }
+
+  function paintScope() {
+    var all = radio("scope") === "all";
+    $("devices").className = "devs" + (all ? " off" : "");
+    $("scopeNote").textContent = all
+      ? "Every device on the network uses the VPN, including new ones. Their DNS goes to AdGuard, so the router's adblock and .lan names don't apply to them."
+      : "Only ticked devices use the VPN. Devices are matched by IP address, so give them a fixed address (DHCP reservation). Their DNS goes to AdGuard.";
+  }
+
+  function paint(d, full) {
+    data = d;
+    var s = d.status || {};
+    paintStatus(s);
+    if (full || !dirty) {
+      $("enabled").checked = !!s.enabled;
+      setRadio("mode", s.mode || "cli");
+      setRadio("scope", s.scope || "devices");
+      fillLocations(s.mode || "cli", s.location);
+      fillDevices(s);
+    }
+    schedule(s.state === "connecting" || s.state === "fallback" ? 3000 : 15000);
+  }
+
+  function load(full) {
+    return FM.get("agvpn_web_app.cgi").then(function (r) { return r.json(); }).then(function (d) {
+      if (d.result !== 0) throw new Error(d.reason || "load failed");
+      paint(d, full);
+    });
+  }
+
+  function schedule(ms) {
+    if (poll) clearTimeout(poll);
+    poll = setTimeout(function () { load(false).catch(function () { schedule(15000); }); }, ms);
+  }
+
+  function save() {
+    var mode = radio("mode"), scope = radio("scope"), ips = chosenIps();
+    if ($("enabled").checked && scope === "devices" && !ips.length) {
+      $("msg").className = "status err";
+      $("msg").textContent = "Tick at least one device, or choose Whole home.";
+      return;
+    }
+    $("save").disabled = true;
+    $("msg").className = "status";
+    $("msg").textContent = "Saving…";
+    FM.post("agvpn_web_app.cgi", {
+      action: "apply", enabled: $("enabled").checked ? "1" : "0", mode: mode,
+      location: $("location").value, scope: scope, devices: ips.join(",")
+    }).then(function (r) { return r.json(); }).then(function (j) {
+      if (j.result !== 0) throw new Error(j.reason || "save failed");
+      dirty = false;
+      $("msg").className = "status ok";
+      $("msg").textContent = $("enabled").checked ? "Saved. Connecting…" : "Saved. VPN is off.";
+      setPill($("enabled").checked ? "Connecting…" : "Off", $("enabled").checked ? "warn" : "");
+      schedule(2500);
+    }).catch(function (e) {
+      $("msg").className = "status err";
+      $("msg").textContent = "Save failed: " + e.message;
+    }).finally(function () { $("save").disabled = false; });
+  }
+
+  function addIp() {
+    var ip = $("addip").value.trim();
+    if (!LAN.test(ip)) { $("msg").className = "status err"; $("msg").textContent = "Enter a LAN address like 192.168.1.50."; return; }
+    var existing = document.querySelector('#devices input[value="' + ip + '"]');
+    if (existing) existing.checked = true; else addDeviceRow($("devices"), ip, "Added by IP", ip, true);
+    $("addip").value = ""; dirty = true; $("msg").textContent = "";
+  }
+
+  function start() {
+    $("gate").style.display = "none";
+    $("panel").style.display = "block";
+    load(true).catch(function (e) {
+      $("msg").className = "status err";
+      $("msg").textContent = "Load failed: " + e.message;
+    });
+    [].forEach.call(document.querySelectorAll('input[name="mode"]'), function (r) {
+      r.onchange = function () { dirty = true; fillLocations(radio("mode"), ""); };
+    });
+    [].forEach.call(document.querySelectorAll('input[name="scope"]'), function (r) {
+      r.onchange = function () { dirty = true; paintScope(); };
+    });
+    $("enabled").onchange = $("location").onchange = function () { dirty = true; };
+    [].forEach.call(document.querySelectorAll('input[name="sort"]'), function (r) {
+      r.onchange = function () {
+        try { localStorage.setItem("fm_vpn_sort", radio("sort")); } catch (e) {}
+        fillLocations(radio("mode"), $("location").value);
+      };
+    });
+    $("save").onclick = save;
+    $("addbtn").onclick = addIp;
+    $("addip").addEventListener("keydown", function (e) { if (e.key === "Enter") addIp(); });
+  }
+  function showGate() {
+    $("gate").style.display = "grid";
+    $("panel").style.display = "none";
+    $("gbtn").onclick = function () {
+      var pw = $("gpw").value;
+      if (!pw) return;
+      $("gmsg").textContent = "Checking…";
+      FM.login(pw).then(function (ok) { ok ? start() : ($("gmsg").textContent = "Wrong password."); })
+        .catch(function (e) { $("gmsg").textContent = "Error: " + e.message; });
+    };
+    $("gpw").addEventListener("keydown", function (e) { if (e.key === "Enter") $("gbtn").click(); });
+  }
+  if (FM.hasCred()) { FM.ensure().then(start).catch(showGate); } else { showGate(); }
+</script>
+</body>
+</html>

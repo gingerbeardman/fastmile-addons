@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic DNS — FastMile 5G Gateway</title>
+<style>
+  /* mirrors the stock web_whw theme (styles.css + component styles in main.js) */
+  @font-face{font-family:NokiaPureHeadline;font-weight:400;font-display:swap;
+    src:url(/web_whw/NokiaPureHeadline_Regular.54599c8f5d2af85b.woff2) format("woff2")}
+  @font-face{font-family:NokiaPureHeadline;font-weight:700;font-display:swap;
+    src:url(/web_whw/NokiaPureHeadline_Bold.4850bce839d20086.woff2) format("woff2")}
+  :root{ --primary:#0168ff; --background:#f9f9f9; --accent:#dcdcdc; --sideMenu:#fff;
+         --nokiaFont:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+         --title:NokiaPureHeadline,var(--nokiaFont); --line:rgba(102,102,102,.12); }
+  html,body{margin:0;min-height:100%}
+  body{background:var(--background);font-family:var(--nokiaFont);font-size:16px}
+
+  /* ---------- sidebar (width matches FMMenu.width) ---------- */
+  .sidenav{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--sideMenu);
+           padding-bottom:87px;box-sizing:border-box;overflow:hidden}
+  .logo{display:inline-flex;width:150px;height:28px;padding:36px 0 30px 24px}
+  .logo img{max-width:100%;max-height:100%;object-fit:contain}
+  .logout{position:fixed;bottom:0;width:219px;background:var(--sideMenu)}
+  .logout hr{margin:0 16px;border:0;border-top:1px solid #0000001f}
+  .logout-row{height:56px;padding-left:16px;display:flex;align-items:center}
+  .avatar{width:32px;height:32px}
+  .user{display:flex;flex-direction:column;padding-left:12px;font-size:14px;line-height:20px}
+  .user a{font-weight:600;color:#000;text-decoration:none}
+  .user a:hover{font-weight:700}
+  .lang{margin-left:auto;margin-right:16px;font:16px Roboto,"Helvetica Neue",sans-serif;
+        color:#000000de;display:flex;align-items:center;gap:12px}
+  .lang:after{content:"";border:5px solid transparent;border-top-color:#0000008a;
+              border-bottom:0;margin-top:2px}
+
+  /* ---------- page ---------- */
+  .page{margin-left:220px;padding:39px 24px 55px;max-width:1160px;box-sizing:border-box}
+  .page-title{font-family:var(--title);font-weight:700;font-size:26px;line-height:32px;
+              color:#003;margin:0 0 30px}
+  .page-title span{font-weight:400}
+  .grid{display:grid;grid-template-columns:1fr 1fr;padding:8px 16px;background:#fff;
+        border-radius:16px;line-height:60px}
+  .k{color:#666;font-size:14px;border-bottom:1px solid var(--line)}
+  .v{display:flex;justify-content:flex-end;align-items:center;gap:8px;color:#333;
+     font-weight:700;font-size:14px;border-bottom:1px solid var(--line);
+     white-space:nowrap;overflow:hidden}
+  .note{grid-column:1/-1;color:#666;font-size:14px;line-height:20px;padding:14px 0;
+        border-bottom:1px solid var(--line)}
+  .box{width:305px;height:40px;box-sizing:border-box;border:1px solid #ccc;
+       border-radius:8px;padding:0 14px;font:400 14px var(--nokiaFont);color:#333;
+       background:#fff;outline:none}
+  .box:focus{border-color:var(--primary)}
+  select.box{font-weight:700;appearance:none;-webkit-appearance:none;cursor:pointer;
+    padding-right:34px;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath d='M0 0h10L5 5z' fill='%23757575'/%3E%3C/svg%3E") no-repeat right 14px center}
+  code{font:400 13px ui-monospace,Menlo,monospace;color:#333}
+  .dot{width:10px;height:10px;border-radius:50%;background:#ccc}
+  .dot.on{background:#6eb874}
+
+  /* toggle — stock mat-slide-toggle overrides */
+  .switch{position:relative;display:inline-block;width:44px;height:25px;cursor:pointer}
+  .switch input{position:absolute;opacity:0;width:0;height:0}
+  .switch span{position:absolute;inset:0;border-radius:15px;background:var(--accent);
+               transition:background-color 80ms linear}
+  .switch span:before{content:"";position:absolute;width:19px;height:19px;left:5px;top:3px;
+    border-radius:50%;background:#fff;transition:transform 80ms linear;
+    box-shadow:0 2px 1px -1px #0003,0 1px 1px #00000024,0 1px 3px #0000001f}
+  .switch input:checked + span{background:var(--primary)}
+  .switch input:checked + span:before{transform:translateX(16px)}
+
+  .actions{grid-column:1/-1;line-height:normal;padding:10px 0 8px;text-align:center}
+  .save{display:block;margin:0 auto;width:230px;height:40px;padding:8px 24px;border:0;
+        border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;
+        font:500 14px/16px var(--nokiaFont)}
+  .save:disabled{background:var(--accent);cursor:default}
+  .status{display:block;min-height:18px;margin-top:8px;font-size:13px;color:#666}
+  .status.ok{color:#3a8a41} .status.err{color:#e23b3b}
+</style>
+<link rel="stylesheet" href="/web_whw/fm-theme.css?v=12">
+<script src="/web_whw/fm-theme.js?v=3"></script>
+<script src="/web_whw/fm-menu.js?v=9"></script>
+</head>
+<body>
+
+<!-- ===================== sidebar ===================== -->
+<aside class="sidenav">
+  <div class="logo"><img src="/web_whw/assets/icons/Nokia.svg" alt="NOKIA"></div>
+  <div id="menu"></div>
+  <div class="logout">
+    <hr>
+    <div class="logout-row">
+      <img class="avatar" src="/web_whw/assets/icons/Avatar.svg" alt="">
+      <div class="user"><span>admin</span><a href="/web_whw/#/overview">Logout</a></div>
+      <span class="lang">English</span>
+    </div>
+  </div>
+</aside>
+
+<!-- ===================== page ===================== -->
+<main class="page">
+  <div class="page-title"><span>Application /</span> Dynamic DNS</div>
+
+  <!-- one-time credential gate -->
+  <div id="gate" class="grid" style="display:none">
+    <div class="note">Enter the admin password once. It is stored only in this
+      browser, so you won't be asked again.</div>
+    <div class="k">Admin password</div>
+    <div class="v"><input class="box" type="password" id="gpw" autocomplete="current-password"></div>
+    <div class="actions">
+      <button class="save" id="gbtn">Continue</button>
+      <span class="status" id="gmsg"></span>
+    </div>
+  </div>
+
+  <!-- DDNS form -->
+  <div id="panel" class="grid" style="display:none">
+    <div class="k">Status</div>
+    <div class="v"><span id="stateDot" class="dot"></span><span id="stateTxt">…</span></div>
+    <div class="k">Enable Dynamic DNS</div>
+    <div class="v"><label class="switch"><input type="checkbox" id="enabled"><span></span></label></div>
+    <label class="k" for="service">Provider</label>
+    <div class="v"><select class="box" id="service"></select></div>
+    <div class="k updrow">Update URL</div>
+    <div class="v updrow"><code id="updUrl"></code></div>
+    <label class="k" for="domain">Hostname (FQDN)</label>
+    <div class="v"><input class="box" type="text" id="domain" placeholder="myhost.changeip.com"></div>
+    <label class="k" for="username">Username</label>
+    <div class="v"><input class="box" type="text" id="username" autocomplete="off"></div>
+    <label class="k" for="password">Password / token</label>
+    <div class="v"><input class="box" type="password" id="password" autocomplete="off"
+         placeholder="Leave blank to keep current"></div>
+    <label class="k" for="interface">Uplink</label>
+    <div class="v"><select class="box" id="interface">
+      <option value="ltewan">ltewan (cellular)</option></select></div>
+    <div class="note">The public address is read from the internet. The cellular
+      address is private and is not published.</div>
+    <div class="actions">
+      <button class="save" id="save">Save Changes</button>
+      <span class="status" id="msg"></span>
+    </div>
+  </div>
+</main>
+
+<!-- device crypto stack + shared auth helper -->
+<script src="/web_whw/assets/js/jsencrypt.min.js"></script>
+<script src="/web_whw/assets/js/sjcl.js"></script>
+<script src="/web_whw/assets/js/crypto_page.js"></script>
+<script src="/web_whw/fm-auth.js"></script>
+<script>
+  var PROVIDERS = ["changeip.com","duckdns.org","dynv6.com","no-ip.com","dyn.com",
+    "afraid.org-basicauth","google.com","he.net","dynu.com","namecheap.com",
+    "ddnss.de","spdyn.de","nsupdate.info","desec.io","easydns.com","zoneedit.com",
+    "dnsomatic.com","dnsexit.com","selfhost.de","strato.com","ovh.com"];
+  var $ = function(id){ return document.getElementById(id); };
+  FMMenu.render($("menu"));
+
+  function fillProviders(sel){
+    $("service").innerHTML="";
+    PROVIDERS.forEach(function(p){
+      var o=document.createElement("option"); o.value=p; o.textContent=p;
+      if(p===sel) o.selected=true; $("service").appendChild(o);
+    });
+    if(sel && PROVIDERS.indexOf(sel)<0){
+      var o=document.createElement("option"); o.value=sel; o.textContent=sel+" (current)";
+      o.selected=true; $("service").appendChild(o);
+    }
+  }
+  var UPDATE_URLS = { "changeip.com": "nic.changeip.com/nic/update" };
+  function setPill(txt){
+    $("stateTxt").textContent=txt||"—";
+    var on=/^Updated: \d{1,3}(\.\d{1,3}){3}$/.test(txt||"");
+    $("stateDot").className="dot"+(on?" on":"");
+  }
+  function showUpdUrl(){
+    var u=UPDATE_URLS[$("service").value]||"";
+    $("updUrl").textContent=u;
+    [].forEach.call(document.querySelectorAll(".updrow"),function(e){ e.style.display=u?"":"none"; });
+  }
+
+  function loadConfig(){
+    return FM.get("ddns_uci_web_app.cgi").then(function(r){return r.json();})
+      .then(function(d){
+        $("enabled").checked = d.enabled==="1" || d.enabled===true;
+        fillProviders(d.service_name||"changeip.com"); showUpdUrl();
+        $("domain").value=d.domain||""; $("username").value=d.username||"";
+        var iface=d.interface||"ltewan";
+        if(![].some.call($("interface").options,function(o){return o.value===iface;})){
+          var extra=document.createElement("option"); extra.value=iface; extra.textContent=iface;
+          $("interface").appendChild(extra);
+        }
+        $("interface").value=iface;
+        setPill(d.status||"—");
+      });
+  }
+  function save(){
+    $("save").disabled=true; $("msg").className="status"; $("msg").textContent="Saving…";
+    var body={ enabled:$("enabled").checked?"1":"0", service_name:$("service").value,
+      domain:$("domain").value.trim(), username:$("username").value.trim(),
+      interface:$("interface").value };
+    if($("password").value) body.password=$("password").value;
+    FM.post("ddns_uci_web_app.cgi", body).then(function(r){return r.json();})
+      .then(function(j){
+        if(j.result===0){ $("msg").className="status ok";
+          $("msg").textContent="Saved. "+(j.status||""); $("password").value="";
+          setPill(j.status||"Saved"); }
+        else { $("msg").className="status err";
+          $("msg").textContent="Error: result "+j.result+(j.reason?" ("+j.reason+")":""); }
+      }).catch(function(e){ $("msg").className="status err";
+        $("msg").textContent="Request failed: "+e.message; })
+      .finally(function(){ $("save").disabled=false; });
+  }
+  function start(){
+    $("gate").style.display="none"; $("panel").style.display="grid";
+    loadConfig().catch(function(e){ $("msg").className="status err";
+      $("msg").textContent="Load failed: "+e.message; });
+    $("save").onclick=save; $("service").onchange=showUpdUrl;
+  }
+  function showGate(){
+    $("gate").style.display="grid"; $("panel").style.display="none";
+    $("gbtn").onclick=function(){ var pw=$("gpw").value; if(!pw) return;
+      $("gmsg").textContent="Checking…";
+      FM.login(pw).then(function(ok){ ok?start():$("gmsg").textContent="Wrong password."; })
+        .catch(function(e){ $("gmsg").textContent="Error: "+e.message; }); };
+    $("gpw").addEventListener("keydown",function(e){ if(e.key==="Enter") $("gbtn").click(); });
+  }
+  if(FM.hasCred()){ FM.ensure().then(start).catch(showGate); } else { showGate(); }
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+/* fm-theme.css — scale the stock UI, and a dark palette.
+   100% is a little large and one browser step (90%) is a little small.
+   fm-theme.js sets .fm-dark from the system's prefers-color-scheme. */
+
+html{zoom:.9}
+
+html.fm-dark{
+  color-scheme:dark;
+  background:#14161c;
+  --background:#14161c;
+  --card:#1c2028;
+  --sideMenu:#171a21;
+  --accent:#3a4150;
+  --line:rgba(255,255,255,.12);
+  --primary:#4c8dff;
+  --primaryFocus:#4c8dff;
+  --primaryHover:#1c3f86;
+}
+html.fm-dark .nokia-theme{
+  --background:#14161c;
+  --card:#1c2028;
+  --sideMenu:#171a21;
+  --accent:#3a4150;
+  --primary:#4c8dff;
+  --primaryFocus:#4c8dff;
+  --primaryHover:#1c3f86;
+}
+html.fm-dark body{background:#14161c;color:#e6e8ee}
+html.fm-dark .fm-mi{color:#b0b6c2}
+html.fm-dark .fm-mi.fm-mh{color:#6c7382}
+html.fm-dark a.fm-mi:hover,
+html.fm-dark a.fm-mi:focus,
+html.fm-dark a.fm-mi.active{color:#f2f4f8;background:#2a3040}
+html.fm-dark .mat-drawer-container{background:#14161c}
+html.fm-dark input,
+html.fm-dark textarea,
+html.fm-dark select{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-option{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-option.mat-active{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-option.mat-option-disabled{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-optgroup-label{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-optgroup-disabled .mat-optgroup-label{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-pseudo-checkbox{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-app-background,:where(html.fm-dark) .nokia-theme.mat-app-background{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-autocomplete-panel{background:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-autocomplete-panel .mat-option.mat-selected:not(.mat-active):not(:hover){background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-autocomplete-panel .mat-option.mat-selected:not(.mat-active):not(:hover):not(.mat-option-disabled){color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-badge-disabled .mat-badge-content{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-bottom-sheet-container{background:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-button.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-button.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-button.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-button.mat-button-disabled.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-icon-button.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-icon-button.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-icon-button.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-icon-button.mat-button-disabled.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-stroked-button.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-stroked-button.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-stroked-button.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-stroked-button.mat-button-disabled.mat-button-disabled{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-stroked-button:not(.mat-button-disabled){border-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-flat-button,:where(html.fm-dark) .nokia-theme .mat-raised-button,:where(html.fm-dark) .nokia-theme .mat-fab,:where(html.fm-dark) .nokia-theme .mat-mini-fab{color:#e6e8ee;background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-flat-button.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-flat-button.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-flat-button.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-flat-button.mat-button-disabled.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-raised-button.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-raised-button.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-raised-button.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-raised-button.mat-button-disabled.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-fab.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-fab.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-fab.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-fab.mat-button-disabled.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-mini-fab.mat-primary.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-mini-fab.mat-accent.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-mini-fab.mat-warn.mat-button-disabled,:where(html.fm-dark) .nokia-theme .mat-mini-fab.mat-button-disabled.mat-button-disabled{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-appearance-standard{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-group-appearance-standard .mat-button-toggle+.mat-button-toggle{border-left:solid 1px #343a46}
+:where(html.fm-dark) .nokia-theme [dir=rtl] .mat-button-toggle-group-appearance-standard .mat-button-toggle+.mat-button-toggle{border-right:solid 1px #343a46}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-group-appearance-standard.mat-button-toggle-vertical .mat-button-toggle+.mat-button-toggle{border-top:solid 1px #343a46}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-checked{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-checked.mat-button-toggle-appearance-standard{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-disabled{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-standalone.mat-button-toggle-appearance-standard,:where(html.fm-dark) .nokia-theme .mat-button-toggle-group-appearance-standard{border:solid 1px #343a46}
+:where(html.fm-dark) .nokia-theme .mat-card{background:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-card-subtitle{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-checkbox-disabled:not(.mat-checkbox-checked) .mat-checkbox-frame{border-color:#4a5160}
+:where(html.fm-dark) .nokia-theme .mat-checkbox-disabled .mat-checkbox-label{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-chip.mat-standard-chip{background-color:#2c313c;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-chip.mat-standard-chip .mat-chip-remove{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-table{background:#1c2028}
+:where(html.fm-dark) .nokia-theme mat-row,:where(html.fm-dark) .nokia-theme mat-header-row,:where(html.fm-dark) .nokia-theme mat-footer-row,:where(html.fm-dark) .nokia-theme th.mat-header-cell,:where(html.fm-dark) .nokia-theme td.mat-cell,:where(html.fm-dark) .nokia-theme td.mat-footer-cell{border-bottom-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-header-cell{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-cell,:where(html.fm-dark) .nokia-theme .mat-footer-cell{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-calendar-arrow{fill:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-datepicker-toggle,:where(html.fm-dark) .nokia-theme .mat-datepicker-content .mat-calendar-next-button,:where(html.fm-dark) .nokia-theme .mat-datepicker-content .mat-calendar-previous-button{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-calendar-table-header,:where(html.fm-dark) .nokia-theme .mat-calendar-body-label{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-calendar-body-cell-content,:where(html.fm-dark) .nokia-theme .mat-date-range-input-separator{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-calendar-body-disabled>.mat-calendar-body-cell-content:not(.mat-calendar-body-selected):not(.mat-calendar-body-comparison-identical){color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-form-field-disabled .mat-date-range-input-separator{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-datepicker-content{background-color:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-date-range-input-inner[disabled]{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-dialog-container{background:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-divider{border-top-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-divider-vertical{border-right-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-expansion-panel{background:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-action-row{border-top-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-expansion-panel:not(.mat-expanded):not([aria-disabled=true]) .mat-expansion-panel-header:hover{background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-expansion-panel-header-title{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-expansion-panel-header-description,:where(html.fm-dark) .nokia-theme .mat-expansion-indicator:after{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-expansion-panel-header[aria-disabled=true]{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-form-field-appearance-legacy .mat-form-field-label,:where(html.fm-dark) .nokia-theme .mat-form-field-appearance-legacy .mat-hint{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-form-field-appearance-fill.mat-form-field-disabled .mat-form-field-label{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-form-field-appearance-outline .mat-form-field-outline-thick{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-form-field-appearance-outline.mat-form-field-disabled .mat-form-field-label{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-form-field-type-mat-native-select .mat-form-field-infix:after{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-input-element:disabled,:where(html.fm-dark) .nokia-theme .mat-form-field-type-mat-native-select.mat-form-field-disabled .mat-form-field-infix:after{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-input-element::placeholder{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-input-element::-moz-placeholder{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-input-element::-webkit-input-placeholder{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-input-element:-ms-input-placeholder{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-list-base .mat-list-item,:where(html.fm-dark) .nokia-theme .mat-list-base .mat-list-option{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-list-base .mat-subheader{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-list-base .mat-list-item-disabled{background-color:#2c313c;color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-menu-panel{background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-menu-item{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-menu-item[disabled],:where(html.fm-dark) .nokia-theme .mat-menu-item[disabled] .mat-menu-submenu-icon,:where(html.fm-dark) .nokia-theme .mat-menu-item[disabled] .mat-icon-no-color{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-menu-item .mat-icon-no-color,:where(html.fm-dark) .nokia-theme .mat-menu-submenu-icon{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-paginator{background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-paginator,:where(html.fm-dark) .nokia-theme .mat-paginator-page-size .mat-select-trigger{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-progress-bar-buffer{background-color:#243656}
+:where(html.fm-dark) .nokia-theme .mat-progress-bar.mat-accent .mat-progress-bar-buffer{background-color:#243656}
+:where(html.fm-dark) .nokia-theme .mat-progress-bar.mat-warn .mat-progress-bar-buffer{background-color:#3a2428}
+:where(html.fm-dark) .nokia-theme .mat-radio-button.mat-radio-disabled .mat-radio-label-content{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-select-value{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-select-placeholder{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-select-disabled .mat-select-value{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-select-arrow{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-select-panel{background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-form-field .mat-select.mat-select-disabled .mat-select-arrow{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-drawer-container{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-drawer{background-color:#1c2028;color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-drawer.mat-drawer-push{background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-step-header .mat-step-label,:where(html.fm-dark) .nokia-theme .mat-step-header .mat-step-optional{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-step-header .mat-step-label.mat-step-label-active{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-stepper-horizontal,:where(html.fm-dark) .nokia-theme .mat-stepper-vertical{background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-stepper-vertical-line:before{border-left-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-horizontal-stepper-header:before,:where(html.fm-dark) .nokia-theme .mat-horizontal-stepper-header:after,:where(html.fm-dark) .nokia-theme .mat-stepper-horizontal-line{border-top-color:#ffffff1f}
+:where(html.fm-dark) .nokia-theme .mat-sort-header-arrow{color:#b0b6c2}
+:where(html.fm-dark) .nokia-theme .mat-tab-label,:where(html.fm-dark) .nokia-theme .mat-tab-link{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-tab-label.mat-tab-disabled,:where(html.fm-dark) .nokia-theme .mat-tab-link.mat-tab-disabled{color:#8b93a1}
+:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-primary.mat-background-primary>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-primary.mat-background-primary>.mat-tab-link-container .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-primary.mat-background-primary>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-primary.mat-background-primary>.mat-tab-link-container .mat-ink-bar{background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-accent.mat-background-accent>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-accent.mat-background-accent>.mat-tab-link-container .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-accent.mat-background-accent>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-accent.mat-background-accent>.mat-tab-link-container .mat-ink-bar{background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-warn.mat-background-warn>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-group.mat-warn.mat-background-warn>.mat-tab-link-container .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-warn.mat-background-warn>.mat-tab-header .mat-ink-bar,:where(html.fm-dark) .nokia-theme .mat-tab-nav-bar.mat-warn.mat-background-warn>.mat-tab-link-container .mat-ink-bar{background-color:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-toolbar{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-tree{background:#1c2028}
+:where(html.fm-dark) .nokia-theme .mat-tree-node,:where(html.fm-dark) .nokia-theme .mat-nested-tree-node{color:#e6e8ee}
+:where(html.fm-dark) .nokia-theme .mat-button-toggle-group-appearance-standard .mat-button-toggle+.mat-button-toggle{border-left:1px solid #343a46}
+html.fm-dark .hint-msg{color:#b0b6c2}
+html.fm-dark .nokia-table{background:#1c2028}
+html.fm-dark th.mat-header-cell{color:#b0b6c2}
+html.fm-dark td.mat-cell{color:#e6e8ee}
+html.fm-dark .nokia-paginator{background:#1c2028}
+html.fm-dark .table{background:#1c2028}
+html.fm-dark tr{color:#e6e8ee;border-bottom:1px solid #343a46}
+html.fm-dark td{border-bottom:1px solid #343a46}
+html.fm-dark .nokia-btn-selector,html.fm-dark .nokia-btn-selector__days{color:#b0b6c2;border:1px solid #343a46}
+html.fm-dark .nokia-btn-selector:hover,html.fm-dark .nokia-btn-selector__days:hover{background-color:#14161c;color:#b0b6c2}
+html.fm-dark .nokia-confirm__message{color:#b0b6c2}
+html.fm-dark .label,html.fm-dark .label-last,html.fm-dark .value,html.fm-dark .value-last{border-bottom:1px solid #343a46}
+html.fm-dark .label,html.fm-dark .label-last{color:#b0b6c2}
+html.fm-dark .value,html.fm-dark .value-last{color:#e6e8ee}
+html.fm-dark .more-button:hover{background-color:#14161c}
+html.fm-dark .radio-title{color:#e6e8ee}
+html.fm-dark .cdk-high-contrast-black-on-white .mat-checkbox-checkmark-path{stroke:#e6e8ee !important}
+html.fm-dark .ap-card{background:#1c2028}
+html.fm-dark .ap-label,html.fm-dark .ap-label-last,html.fm-dark .ap-value,html.fm-dark .ap-value-last{border-bottom:1px solid #343a46}
+html.fm-dark .ap-label,html.fm-dark .ap-label-last{color:#b0b6c2}
+html.fm-dark .ap-value,html.fm-dark .ap-value-last{color:#e6e8ee}
+html.fm-dark .ap-default{background:#14161c;color:#b0b6c2}
+html.fm-dark .ap-status-connected{background:#1a2740;color:#9db7ff}
+html.fm-dark .ap-status-disconnected{background:#2a1e1e;color:#ff8d8d}
+html.fm-dark .not-available{color:#b0b6c2}
+html.fm-dark .network-overview{background:#1c2028}
+html.fm-dark .card{background:#1c2028}
+html.fm-dark .name-of-value-in-card,html.fm-dark .name-of-value-in-card-last,html.fm-dark .name-of-value-in-card-no-padding{color:#b0b6c2}
+html.fm-dark .value-in-card,html.fm-dark .value-in-card-last,html.fm-dark .value-in-card-no-padding{color:#e6e8ee}
+html.fm-dark .bold,html.fm-dark .icon-title{color:#e6e8ee}
+html.fm-dark .signal-bar-container{color:#e6e8ee}
+html.fm-dark .title{color:#e6e8ee}
+html.fm-dark .gw-info-title{color:#e6e8ee}
+html.fm-dark .text-light-grey{color:#b0b6c2}
+html.fm-dark .bar1:not(.signal),html.fm-dark .bar2:not(.signal),html.fm-dark .bar3:not(.signal),html.fm-dark .bar4:not(.signal),html.fm-dark .bar5:not(.signal){background-color:#5c6778}
+html.fm-dark .bar1.signal,html.fm-dark .bar2.signal,html.fm-dark .bar3.signal,html.fm-dark .bar4.signal,html.fm-dark .bar5.signal{background-color:var(--primary)}
+html.fm-dark .nokia-panel-highlight:hover   .mat-expansion-panel-header:hover{background:#1c2028}
+html.fm-dark .sub-title{color:#e6e8ee}
+html.fm-dark .text-title-grey{color:#b0b6c2}
+html.fm-dark table,html.fm-dark td{border-bottom:1px solid #343a46}
+html.fm-dark .text{color:#e6e8ee}
+html.fm-dark .statistics-background{background:#1c2028}
+html.fm-dark .add-container{color:#e6e8ee}
+html.fm-dark .tooltip{background:#2a3040}
+html.fm-dark .tooltip   .tooltiptext{background:#2a3040}
+html.fm-dark th{color:#b0b6c2;border-bottom:1px solid #343a46}
+html.fm-dark .tooltiptext{background:#1c2028}
+html.fm-dark tr:hover{background:#1a2740}
+html.fm-dark .speedtest-title{color:#b0b6c2}
+html.fm-dark .speedtest-date-text{color:#e6e8ee}
+html.fm-dark .speedtest-content-text{color:#e6e8ee}
+html.fm-dark .data-card{background:#1c2028}
+html.fm-dark .speedtest-desc-text{color:#e6e8ee}
+html.fm-dark .name-of-value-in-card-no-padding{color:#b0b6c2}
+html.fm-dark .value-in-card,html.fm-dark .value-in-card-no-padding{color:#e6e8ee}
+html.fm-dark .title,html.fm-dark .data-title,html.fm-dark .sub-title,html.fm-dark .status_card_row_no_data{color:#e6e8ee}
+html.fm-dark .speedtest-text{color:#b0b6c2}
+html.fm-dark .ngx-charts-tooltip-content.type-popover{background:#1c2028}
+html.fm-dark .tooltip-item .tooltip-item-color{color:#b0b6c2}
+html.fm-dark .chart-legend .legend-label:hover{color:#e6e8ee}
+html.fm-dark .chart-legend .legend-label .active .legend-label-text{color:#e6e8ee}
+html.fm-dark .chart-legend .legend-label-color{color:#b0b6c2}
+html.fm-dark .ngx-charts .tooltip-anchor{fill:#e6e8ee}
+html.fm-dark .ngx-charts .reference-area{fill:#e6e8ee}
+html.fm-dark .name-of-value-in-card,html.fm-dark .name-of-value-in-card-no-padding{color:#b0b6c2}
+html.fm-dark .legend-label{color:#b0b6c2}
+html.fm-dark .status_card_row_no_data{color:#b0b6c2}
+html.fm-dark .status-text{color:#b0b6c2}
+html.fm-dark .off-dot{background-color:#3a4050}
+html.fm-dark .sms-title{color:#b0b6c2}
+html.fm-dark .sms-date-text{color:#e6e8ee}
+html.fm-dark .sms-date-text-unread{color:#e6e8ee}
+html.fm-dark .sms-content-text{color:#e6e8ee}
+html.fm-dark .sms-content-text-unread{color:#e6e8ee}
+html.fm-dark .truncate{color:#e6e8ee}
+html.fm-dark .sms-sender-text{color:#e6e8ee}
+html.fm-dark .menu-item   a{color:#b0b6c2}
+html.fm-dark .menu-item   a:hover,html.fm-dark .menu-item   a:focus{color:#e6e8ee;background-color:#2c313c}
+html.fm-dark .menu-item   a.activeMenuItem{color:#e6e8ee;background-color:#2c313c}
+html.fm-dark .nokia-option{color:#e6e8ee!important}
+html.fm-dark .divider{border-color:#ffffff1f}
+html.fm-dark .logout hr{border-top:1px solid #ffffff1f}
+html.fm-dark .user a{color:#e6e8ee}
+html.fm-dark .lang{color:#e6e8ee}
+html.fm-dark .lang:after{border-top-color:#b0b6c2}
+/* Nokia blue logo is too dark on the dark sidebar */
+html.fm-dark .nokia-logo-img,html.fm-dark .logo img{filter:brightness(1.8)}
+html.fm-dark .page-title{color:#e6e8ee}
+html.fm-dark .grid{background:#1c2028}
+html.fm-dark .k{color:#b0b6c2}
+html.fm-dark .v{color:#e6e8ee}
+html.fm-dark .note{color:#b0b6c2}
+html.fm-dark .box{border:1px solid #343a46;color:#e6e8ee;background:#1c2028}
+html.fm-dark select.box{background:#1c2028 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='5'%3E%3Cpath d='M0 0h10L5 5z' fill='%23b0b6c2'/%3E%3C/svg%3E") no-repeat right 14px center}
+html.fm-dark code{color:#e6e8ee}
+html.fm-dark .dot{background:#3a4050}
+html.fm-dark .dot.on{background:#6eb874}
+html.fm-dark .status{color:#b0b6c2}
+html.fm-dark .status.ok{color:#7dcea0}
+html.fm-dark .status.err{color:#ff6b6b}
+html.fm-dark .src label{color:#e6e8ee}
+html.fm-dark .src .meta{color:#b0b6c2}
+html.fm-dark .save.ghost{background:#1c2028}
+html.fm-dark .devs label{color:#e6e8ee}
+html.fm-dark .devs .meta{color:#b0b6c2}
+html.fm-dark .seg span{background:#1c2028}
+html.fm-dark .seg input:checked + span{background:var(--primary);color:#fff}
+html.fm-dark pre.out{color:#e6e8ee}
+html.fm-dark .nokia-onecol-grid,
+html.fm-dark .nokia-twocol-grid,
+html.fm-dark .nokia-twocol-grid-single,
+html.fm-dark .nokia-threecol-grid-single,
+html.fm-dark .nokia-fivecol-grid{background:#1c2028;color:#e6e8ee}
+html.fm-dark .value-container,
+html.fm-dark input.value-container{background:#14161c;color:#e6e8ee;border-color:#343a46}
+html.fm-dark .name-of-value-in-grid,
+html.fm-dark .name-of-value-in-grid-with-msg{border-bottom-color:#ffffff1f}
+/* Stock sheet paints these #333 or #666. The element in the selector beats
+   a component attribute selector such as .radio-title[_ngcontent]. */
+html.fm-dark .nokia-radio-button,
+html.fm-dark .mat-radio-label-content,
+html.fm-dark .name-of-value-in-grid,
+html.fm-dark .name-of-value-in-grid-bold,
+html.fm-dark .name-of-value-in-grid-title,
+html.fm-dark .name-of-value-in-grid-subtitle,
+html.fm-dark .name-of-value-in-grid-last,
+html.fm-dark .name-of-value-in-grid-single,
+html.fm-dark .name-of-value-in-grid-with-msg,
+html.fm-dark .value-in-grid,
+html.fm-dark .value-in-grid-text,
+html.fm-dark .value-in-grid-title,
+html.fm-dark .value-in-grid-last,
+html.fm-dark .value-in-grid-with-x,
+html.fm-dark h3,
+html.fm-dark .nokia-h3,
+html.fm-dark .nokia-select,
+html.fm-dark .nokia-dialog-label,
+html.fm-dark .nokia-pie-labelLine .pie-label{color:#e6e8ee}
+html.fm-dark .nokia-theme .mat-radio-button:not(.mat-radio-checked) .mat-radio-outer-circle{border-color:#b0b6c2}
+/* Speed-test confirm: title, privacy HTML, and Cancel sit on the dark panel.
+   The Yes button keeps its own blue fill and white label. */
+html.fm-dark .speedtest-dialog .mat-dialog-container{color:#e6e8ee}
+html.fm-dark .speedtest-dialog h3.nokia-h3{color:#e6e8ee}
+html.fm-dark .speedtest-dialog .nokia-confirm__message,
+html.fm-dark .speedtest-dialog .nokia-confirm__message p,
+html.fm-dark .speedtest-dialog .nokia-confirm__message b,
+html.fm-dark .speedtest-dialog .nokia-confirm__message u,
+html.fm-dark .speedtest-dialog .nokia-confirm__message i{color:#e6e8ee}
+html.fm-dark .speedtest-dialog .nokia-confirm__message{max-height:60vh;overflow:auto}
+html.fm-dark .speedtest-dialog .nokia-confirm__message a{color:#4c8dff}
+html.fm-dark .speedtest-dialog .nokia-cancel-btn{color:#e6e8ee;border-color:#8b93a1;background:transparent}
+
+/* Language picker hidden (stock sidenav/login and our pages). English only. */
+.lang-container,.lang-select,.logout-row .lang{display:none !important}
+/* Access Control (and other single-column grids): section labels were black on dark. */
+html.fm-dark .nokia-twocol-grid-single .name-of-value-in-grid{color:#e6e8ee !important}
+/* Messages envelope (top right) is a black SVG image. */
+html.fm-dark img.sms-icon{filter:invert(.9)}

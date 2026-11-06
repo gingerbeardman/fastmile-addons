@@ -1,0 +1,444 @@
+#!/bin/sh
+# agvpn — AdGuard VPN for LAN devices, with fallback to the normal connection.
+# Installed as /usr/sbin/agvpn. Run as root.
+#
+#   agvpn run                 supervisor (procd runs this; don't call by hand)
+#   agvpn status              JSON status
+#   agvpn enable | disable    turn on or off (saves, starts or stops the service)
+#   agvpn set mode cli|ipsec  which tunnel to use
+#   agvpn set location <name> cli: city, country or ISO code, or "fastest"
+#                             ipsec: one of the codes in ipsec-servers (gb, de, ...)
+#   agvpn set scope all|devices
+#   agvpn set devices "<ip> <ip> ..."
+#   agvpn locations [refresh] JSON list for the current mode
+#   agvpn locations-mode cli|ipsec [refresh]
+#   agvpn apply enabled=1 mode=.. location=.. scope=.. devices="a,b"  (one restart)
+#   agvpn teardown            remove every rule this script adds
+#
+# Modes:
+# cli   adguardvpn-cli in TUN mode with its own routing off (device agvpn0).
+#       Policy routing sends chosen LAN traffic to table 100, whose default
+#       route via agvpn0 exists only while the tunnel is healthy.
+#       65 locations, uses one AdGuard device slot.
+# ipsec strongSwan IKEv2 to one of AdGuard's 5 router servers. There is no
+#       interface: chosen LAN traffic is SNAT'd to the tunnel address so it
+#       matches the IPsec policy. One credential set works on every server.
+#
+# In both modes, router traffic keeps using the normal WAN. VPN'd devices' DNS
+# (any destination, port 53) is redirected through the tunnel while it is up.
+# When the tunnel is down, the VPN rules are removed and devices fall back.
+#
+# Files in /data/adguardvpn-cli (survive reboots; /data is noexec):
+#   adguardvpn-cli, data/   CLI binary (copied to /tmp/agcli to run) and login
+#   agvpn.conf              settings
+#   ipsec-servers           "<code> <hostname> <City_Name> <Country name>" per line
+#   ipsec.secret            USER=... PASS=... (mode 600)
+
+export HOME=/root   # procd starts us with HOME=/; the CLI finds its login via $HOME
+BASE=/data/adguardvpn-cli
+CONF=$BASE/agvpn.conf
+BIN=/tmp/agcli/adguardvpn-cli
+RUN=/tmp/agvpn-svc
+STATE=$RUN/state.json
+TUN=agvpn0
+TABLE=100
+PRIO=100
+LAN_IF=br-lan
+LAN_NET=192.168.1.0/24
+CHECK_URL=http://1.1.1.1/cdn-cgi/trace
+IPSEC_DNS=94.140.14.140       # AdGuard DNS, unfiltered; reached through the tunnel
+IPSEC_MSS=1360
+
+mkdir -p $RUN
+
+log() { logger -t agvpn "$*"; echo "$(date '+%F %T') $*" >> $RUN/log; }
+strip() { sed 's/\x1b\[[0-9;]*m//g'; }
+
+load_conf() {
+	ENABLED=0; MODE=cli; LOCATION=fastest; SCOPE=devices; DEVICES=""
+	[ -f $CONF ] && . $CONF
+	case "$MODE" in cli|ipsec) ;; *) MODE=cli ;; esac
+}
+
+save_conf() {
+	umask 077
+	cat > $CONF.new <<EOF
+ENABLED=$ENABLED
+MODE=$MODE
+LOCATION="$LOCATION"
+SCOPE=$SCOPE
+DEVICES="$DEVICES"
+EOF
+	mv $CONF.new $CONF
+}
+
+valid_ip() {
+	echo "$1" | grep -q -E '^192\.168\.1\.([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$'
+}
+
+# Sources to send through the VPN: the LAN, or each chosen device.
+sources() {
+	if [ "$SCOPE" = all ]; then echo $LAN_NET
+	else for d in $DEVICES; do valid_ip "$d" && echo $d/32; done; fi
+}
+
+wan_if() { ip route show default | awk '{for(i=1;i<NF;i++) if($i=="dev"){print $(i+1); exit}}'; }
+
+tun_ip() {
+	if [ "$MODE" = ipsec ]; then cat $RUN/vip 2>/dev/null
+	else ip -4 addr show $TUN 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1; fi
+}
+
+write_state() { # state [error]
+	printf '{"enabled":%s,"mode":"%s","state":"%s","location":"%s","connected_location":"%s","scope":"%s","devices":"%s","tun_ip":"%s","since":%s,"error":"%s"}\n' \
+		"$([ "$ENABLED" = 1 ] && echo true || echo false)" "$MODE" "$1" "$LOCATION" \
+		"$(cat $RUN/connected_location 2>/dev/null)" "$SCOPE" "$DEVICES" "$(tun_ip)" \
+		"$(date +%s)" "$(printf '%s' "$2" | tr -d '"\\' | head -c 200)" > $STATE.new
+	mv $STATE.new $STATE
+}
+
+# Rules are kept one per line as "CHAIN <match and target>", inserted at the
+# top with -I and removed with -D from the same line, so they stay symmetrical.
+rules_add() { # table file
+	t=$1
+	while read -r r; do
+		[ -n "$r" ] || continue
+		set -- $r; c=$1; shift
+		iptables -t $t -I $c 1 "$@"
+	done < $2
+}
+rules_del() { # table file
+	t=$1; [ -f $2 ] || return 0
+	while read -r r; do
+		[ -n "$r" ] || continue
+		set -- $r; c=$1; shift
+		while iptables -t $t -D $c "$@" 2>/dev/null; do :; done
+	done < $2
+	rm -f $2
+}
+
+# DNS redirect for VPN'd sources, while the tunnel is up.
+add_dns() { # server
+	: > $RUN/dns.rules
+	for s in $(sources); do for p in udp tcp; do
+		echo "PREROUTING -i $LAN_IF -s $s -p $p --dport 53 -j DNAT --to-destination $1" >> $RUN/dns.rules
+	done; done
+	rules_add nat $RUN/dns.rules
+}
+del_dns() { rules_del nat $RUN/dns.rules; }
+
+# Forget NAT bindings for VPN'd sources so flows re-route after a change.
+flush_ct() {
+	if [ "$SCOPE" = all ]; then
+		conntrack -D --orig-src ${LAN_NET%/*} --mask-src 255.255.255.0 >/dev/null 2>&1
+	else
+		for d in $DEVICES; do valid_ip "$d" && conntrack -D -s $d >/dev/null 2>&1; done
+	fi
+}
+
+# --- cli mode ----------------------------------------------------------------
+
+cli_prep() {
+	[ -f $BASE/adguardvpn-cli ] || { echo "binary missing"; return 1; }
+	mkdir -p /tmp/agcli /root/.local/share
+	if [ ! -x $BIN ] || ! cmp -s $BASE/adguardvpn-cli $BIN; then
+		cp $BASE/adguardvpn-cli $BIN && chmod 755 $BIN
+	fi
+	L=/root/.local/share/adguardvpn-cli
+	if [ ! -L $L ]; then rm -rf $L; ln -s $BASE/data $L; fi
+	$BIN config set-mode TUN >/dev/null 2>&1
+	$BIN config set-tun-routing-mode NONE >/dev/null 2>&1
+	$BIN config set-tun-device-name $TUN >/dev/null 2>&1
+	$BIN config set-change-system-dns off >/dev/null 2>&1
+	$BIN config set-show-hints off >/dev/null 2>&1
+	return 0
+}
+
+# Selection stays while enabled: rules into table 100, NAT and filter for agvpn0.
+cli_add_sel() {
+	cli_del_sel
+	# Table 100 gets every main route except the default, so LAN-to-LAN and
+	# other local subnets keep working. The default via agvpn0 is added later.
+	ip route show table main | grep -v '^default' | while read -r r; do
+		ip route replace $r table $TABLE 2>/dev/null
+	done
+	if [ "$SCOPE" = all ]; then
+		ip rule add iif $LAN_IF lookup $TABLE priority $PRIO
+	else
+		for s in $(sources); do ip rule add from $s lookup $TABLE priority $PRIO; done
+	fi
+	cat > $RUN/cli.nat <<EOF
+POSTROUTING -o $TUN -j MASQUERADE
+EOF
+	cat > $RUN/cli.filter <<EOF
+FORWARD -o $TUN -j ACCEPT
+FORWARD -i $TUN -o $LAN_IF -j ACCEPT
+INPUT -i $TUN -p tcp --syn -j DROP
+INPUT -i $TUN -p udp -j DROP
+EOF
+	cat > $RUN/cli.mangle <<EOF
+FORWARD -o $TUN -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+EOF
+	rules_add nat $RUN/cli.nat; rules_add filter $RUN/cli.filter; rules_add mangle $RUN/cli.mangle
+}
+cli_del_sel() {
+	while ip rule del priority $PRIO 2>/dev/null; do :; done
+	ip route flush table $TABLE 2>/dev/null
+	rules_del nat $RUN/cli.nat; rules_del filter $RUN/cli.filter; rules_del mangle $RUN/cli.mangle
+}
+
+cli_connect() {
+	if [ "$LOCATION" = fastest ]; then
+		$BIN connect -f -y --no-progress -4 > $RUN/connect.out 2>&1
+	else
+		$BIN connect -l "$LOCATION" -y --no-progress -4 > $RUN/connect.out 2>&1
+	fi
+	strip < $RUN/connect.out | sed -n 's/.*[Cc]onnected to \([A-Z][A-Z .()-]*[A-Z)]\).*/\1/p' | head -1 > $RUN/connected_location
+	ip link show $TUN >/dev/null 2>&1
+}
+
+cli_up() { [ -d /sys/class/net/$TUN ]; }
+
+cli_healthy() {
+	cli_up || return 1
+	c=$(curl -s -m 6 --interface $TUN -o /dev/null -w '%{http_code}' $CHECK_URL 2>/dev/null)
+	[ -n "$c" ] && [ "$c" != 000 ]
+}
+
+cli_add_path() {
+	echo 0 > /proc/sys/net/ipv4/conf/$TUN/rp_filter 2>/dev/null
+	ip route replace default dev $TUN table $TABLE
+	DNS=$(awk '/^nameserver [0-9.]+$/{print $2}' $BASE/data/resolv.conf 2>/dev/null | head -1)
+	[ -n "$DNS" ] && add_dns $DNS
+}
+cli_del_path() { ip route del default dev $TUN table $TABLE 2>/dev/null; del_dns; }
+
+cli_disconnect() { [ -x $BIN ] && $BIN disconnect >/dev/null 2>&1; }
+
+cli_locations() {
+	[ -x $BIN ] || cli_prep >/dev/null
+	$BIN list-locations 2>/dev/null | strip | awk '
+		NR>1 && $1 ~ /^[A-Z][A-Z]$/ {
+			iso=$1; ping=$NF
+			line=substr($0, 7); sub(/[ \t]+[0-9]+[ \t]*$/, "", line)
+			country=substr(line, 1, 21); city=substr(line, 22)
+			gsub(/^[ \t]+|[ \t]+$/, "", country); gsub(/^[ \t]+|[ \t]+$/, "", city)
+			gsub(/"/, "", city); gsub(/"/, "", country)
+			printf "%s{\"id\":\"%s\",\"iso\":\"%s\",\"country\":\"%s\",\"city\":\"%s\",\"ping\":%s}", (n++ ? "," : "["), city, iso, country, city, ping+0
+		}
+		END { print (n ? "]" : "[]") }'
+}
+
+# --- ipsec mode --------------------------------------------------------------
+
+ipsec_prep() {
+	[ -x /usr/lib/ipsec/charon ] && [ -x /usr/sbin/swanctl ] || { echo "strongSwan missing"; return 1; }
+	[ -f $BASE/ipsec.secret ] && [ -s $BASE/ipsec-servers ] || { echo "ipsec.secret or ipsec-servers missing"; return 1; }
+	return 0
+}
+
+# Resolve LOCATION to a line of ipsec-servers: code, city or country; fastest = first.
+ipsec_server() {
+	want=$(echo "$LOCATION" | tr 'A-Z' 'a-z')
+	awk -v w="$want" '
+		NF>=2 { line=tolower($0); code=tolower($1)
+			if (w==code || index(line, " " w) || w=="fastest" && !first) { print; exit }
+			if (!first) first=$0 }
+		END { }' $BASE/ipsec-servers | head -1
+}
+
+ipsec_connect() {
+	srv=$(ipsec_server)
+	[ -n "$srv" ] || srv=$(head -1 $BASE/ipsec-servers)
+	set -- $srv; code=$1; host=$2; shift 2; city=$1
+	ip=$(nslookup "$host" 2>/dev/null | awk '/^Address [0-9]+: [0-9]+\./{print $3; exit}')
+	[ -n "$ip" ] || { echo "cannot resolve $host" > $RUN/connect.out; return 1; }
+	. $BASE/ipsec.secret
+	umask 077
+	esc=$(printf '%s' "$PASS" | sed 's/\\/\\\\/g; s/"/\\"/g')
+	cat > /etc/swanctl/swanctl.conf <<EOF
+connections {
+	agvpn {
+		version = 2
+		remote_addrs = $ip
+		vips = 0.0.0.0
+		encap = yes
+		dpd_delay = 30s
+		local {
+			auth = eap-mschapv2
+			eap_id = $USER
+		}
+		remote {
+			auth = pubkey
+			id = $host
+		}
+		children {
+			agvpn {
+				remote_ts = 0.0.0.0/0
+				start_action = none
+				dpd_action = clear
+			}
+		}
+	}
+}
+secrets {
+	eap-agvpn {
+		id = $USER
+		secret = "$esc"
+	}
+}
+EOF
+	unset PASS esc
+	if ! pidof charon >/dev/null; then
+		/usr/lib/ipsec/charon >/dev/null 2>&1 </dev/null &
+		sleep 3
+	fi
+	swanctl --load-all >/dev/null 2>&1
+	swanctl --terminate --ike agvpn --timeout 5 >/dev/null 2>&1
+	swanctl --initiate --child agvpn --timeout 30 > $RUN/connect.out 2>&1
+	grep -q 'completed successfully' $RUN/connect.out || return 1
+	ip -4 addr show lo | awk '/inet /{print $2}' | cut -d/ -f1 | grep -v -E '^(127\.|169\.254\.)' | head -1 > $RUN/vip
+	[ -s $RUN/vip ] || return 1
+	echo "$(echo $city | tr '_a-z' ' A-Z') ($code)" > $RUN/connected_location
+}
+
+ipsec_up() { swanctl --list-sas 2>/dev/null | grep -q INSTALLED; }
+
+ipsec_healthy() {
+	ipsec_up || return 1
+	c=$(curl -s -m 6 --interface $(cat $RUN/vip) -o /dev/null -w '%{http_code}' $CHECK_URL 2>/dev/null)
+	[ -n "$c" ] && [ "$c" != 000 ]
+}
+
+# Selection and path are the same thing here: SNAT to the tunnel address.
+ipsec_add_sel() { :; }
+ipsec_del_sel() { :; }
+
+ipsec_add_path() {
+	vip=$(cat $RUN/vip); wan=$(wan_if)
+	: > $RUN/ipsec.nat; : > $RUN/ipsec.mangle
+	# The router's own test traffic from the tunnel address must not be
+	# masqueraded, or it leaves unencrypted.
+	echo "POSTROUTING -s $vip/32 -j ACCEPT" >> $RUN/ipsec.nat
+	for s in $(sources); do
+		echo "POSTROUTING -s $s -o $wan -j SNAT --to-source $vip" >> $RUN/ipsec.nat
+		echo "FORWARD -s $s -o $wan -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $IPSEC_MSS" >> $RUN/ipsec.mangle
+		echo "FORWARD -d $s -i $wan -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $IPSEC_MSS" >> $RUN/ipsec.mangle
+	done
+	rules_add nat $RUN/ipsec.nat; rules_add mangle $RUN/ipsec.mangle
+	add_dns $IPSEC_DNS
+}
+ipsec_del_path() { del_dns; rules_del nat $RUN/ipsec.nat; rules_del mangle $RUN/ipsec.mangle; }
+
+ipsec_disconnect() {
+	swanctl --terminate --ike agvpn --timeout 5 >/dev/null 2>&1
+	killall charon 2>/dev/null
+	rm -f $RUN/vip
+}
+
+ipsec_locations() {
+	awk 'NF>=4 { code=$1; city=$3; gsub(/_/, " ", city); country=$4; for(i=5;i<=NF;i++) country=country" "$i
+		printf "%s{\"id\":\"%s\",\"iso\":\"%s\",\"country\":\"%s\",\"city\":\"%s\",\"ping\":0}", (n++ ? "," : "["), code, toupper(code), country, city }
+		END { print (n ? "]" : "[]") }' $BASE/ipsec-servers 2>/dev/null
+}
+
+# --- supervisor --------------------------------------------------------------
+
+m() { _fn=$1; shift; ${MODE}_$_fn "$@"; }
+
+teardown() {
+	# Clean both modes, in case the mode changed while running.
+	cli_del_path; cli_del_sel; ipsec_del_path
+	flush_ct
+	cli_disconnect; ipsec_disconnect
+	rm -f $RUN/connected_location
+}
+
+run() {
+	load_conf
+	[ "$ENABLED" = 1 ] || { write_state off; exit 0; }
+	trap 'log "stopping"; teardown; load_conf; write_state off; exit 0' TERM INT
+	teardown
+	err=$(m prep) || { write_state error "$err"; log "$err"; exit 1; }
+	m add_sel
+	backoff=5
+	while :; do
+		write_state connecting
+		if m connect && m healthy; then
+			m add_path; flush_ct
+			log "$MODE connected to $(cat $RUN/connected_location) ip=$(tun_ip)"
+			write_state connected
+			backoff=5; fails=0
+			while sleep 10 & wait $!; do
+				m up || break
+				if m healthy; then fails=0; continue; fi
+				fails=$((fails+1))
+				[ $fails -ge 3 ] && break
+			done
+			log "tunnel unhealthy, falling back"
+		else
+			log "connect failed: $(strip < $RUN/connect.out | grep -i -E 'error|fail|not|cannot' | head -1)"
+		fi
+		m del_path; flush_ct
+		m disconnect
+		write_state fallback "$(strip < $RUN/connect.out 2>/dev/null | grep -i -E 'error|fail|cannot' | head -1)"
+		sleep $backoff & wait $!
+		[ $backoff -lt 300 ] && backoff=$((backoff*2))
+	done
+}
+
+status() {
+	load_conf
+	[ -f $STATE ] || write_state off
+	cat $STATE
+}
+
+locations() {
+	lf=$RUN/locations-$MODE.json
+	if [ "$1" = refresh ] || [ ! -s $lf ] || [ "$(cat $lf)" = "[]" ]; then m locations > $lf.new && mv $lf.new $lf; fi
+	cat $lf
+}
+
+restart_svc() { /etc/init.d/agvpn restart >/dev/null 2>&1; }
+
+case "$1" in
+	run) run ;;
+	status) status ;;
+	teardown) load_conf; teardown ;;
+	enable) load_conf; ENABLED=1; save_conf; /etc/init.d/agvpn enable 2>/dev/null; restart_svc; echo ok ;;
+	disable) load_conf; ENABLED=0; save_conf; /etc/init.d/agvpn stop >/dev/null 2>&1; teardown; write_state off; echo ok ;;
+	set)
+		load_conf
+		case "$2" in
+			mode) case "$3" in cli|ipsec) MODE=$3 ;; *) exit 2 ;; esac ;;
+			location) [ -n "$3" ] || exit 2; LOCATION=$(printf '%s' "$3" | tr -cd 'A-Za-z .()-' | head -c 40) ;;
+			scope) case "$3" in all|devices) SCOPE=$3 ;; *) exit 2 ;; esac ;;
+			devices) d=""; for x in $3; do valid_ip "$x" && d="$d $x"; done; DEVICES=$(echo $d) ;;
+			*) exit 2 ;;
+		esac
+		save_conf
+		[ "$ENABLED" = 1 ] && restart_svc
+		echo ok ;;
+	apply) # apply enabled=0|1 mode=.. location=.. scope=.. devices="a b": one restart
+		load_conf; shift
+		for kv in "$@"; do
+			k=${kv%%=*}; v=${kv#*=}
+			case "$k" in
+				enabled) [ "$v" = 1 ] && ENABLED=1 || ENABLED=0 ;;
+				mode) case "$v" in cli|ipsec) MODE=$v ;; esac ;;
+				location) [ -n "$v" ] && LOCATION=$(printf '%s' "$v" | tr -cd 'A-Za-z .()-' | head -c 40) ;;
+				scope) case "$v" in all|devices) SCOPE=$v ;; esac ;;
+				devices) d=""; for x in $(echo "$v" | tr ',' ' '); do valid_ip "$x" && d="$d $x"; done; DEVICES=$(echo $d) ;;
+			esac
+		done
+		save_conf
+		if [ "$ENABLED" = 1 ]; then
+			/etc/init.d/agvpn enable 2>/dev/null; restart_svc
+		else
+			/etc/init.d/agvpn stop >/dev/null 2>&1; teardown; write_state off
+		fi
+		echo ok ;;
+	locations) load_conf; locations "$2" ;;
+	locations-mode) load_conf; case "$2" in cli|ipsec) MODE=$2 ;; *) exit 2 ;; esac; locations "$3" ;;
+	*) sed -n '2,16p' $0; exit 2 ;;
+esac

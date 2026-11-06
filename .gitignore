@@ -1,0 +1,14 @@
+credentials.local
+device/credentials.local
+device/pkg/
+device/ipsec.secret
+device/agvpn/ipsec-servers
+webui-dev/
+backups/
+*.tgz
+__pycache__/
+server/sessions.json
+server/ddns_state.json
+*.log
+.DS_Store
+snapshots/

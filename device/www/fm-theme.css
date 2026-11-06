@@ -292,3 +292,6 @@ html.fm-dark .speedtest-dialog .nokia-cancel-btn{color:#e6e8ee;border-color:#8b9
 html.fm-dark .nokia-twocol-grid-single .name-of-value-in-grid{color:#e6e8ee !important}
 /* Messages envelope (top right) is a black SVG image. */
 html.fm-dark img.sms-icon{filter:invert(.9)}
+/* Cancel buttons in every stock dialog (Add Cell, rule editors, ...): stock is #333 on the dark panel. */
+html.fm-dark .nokia-cancel-btn{color:#e6e8ee;border-color:#8b93a1;background:transparent}
+html.fm-dark .nokia-cancel-btn:hover{border-color:#e6e8ee}

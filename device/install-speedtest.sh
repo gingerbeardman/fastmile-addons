@@ -93,7 +93,7 @@ tar xzf /data/sysupgrade.tgz.real -C "$STAGE"
 mkdir -p "$STAGE/webs/web_whw"
 cp "$CGI" "$STAGE/webs/speed_test_status_web_app.cgi"
 cp "$BUNDLE" "$STAGE/webs/web_whw/$(basename "$BUNDLE")"
-tar czf /data/sysupgrade.tgz.real -C "$STAGE" .
+sh "$(dirname "$0")/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
 echo "  archive members:"

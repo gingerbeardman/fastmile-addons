@@ -7,7 +7,8 @@
 # / is an overlay on tmpfs, so the copies below also go into
 # /data/sysupgrade.tgz.real. /etc/init.d/1restore extracts
 # /data/sysupgrade.tgz onto / at boot and deletes it. The rc.local
-# shipped in that archive copies the keeper back.
+# shipped in that archive copies the keeper back once the boot has finished
+# (see keeper-pack.sh, which every installer uses to build the archive).
 #
 # The router's own index.html is patched in place by patch-index.sh (a copy
 # of the stock file is kept as index.html.orig). No Nokia file is shipped.
@@ -47,14 +48,12 @@ chmod 755 "$WEBROOT/fm-auth.js" "$WEBROOT/fm-menu.js" "$WEBROOT/ddns.html" \
 [ -f "$WEBROOT/adblock.html" ] && chmod 755 "$WEBROOT/adblock.html"
 [ -f "$WEBROOT/vpn.html" ] && chmod 755 "$WEBROOT/vpn.html"
 
-echo "== rc.local re-seed (1restore deletes the one-shot archive) =="
-if ! grep -q 'sysupgrade.tgz.real' /etc/rc.local; then
+# The archive re-arm block is written into the archive's copy of rc.local by
+# keeper-pack.sh (fail-safe: only after pcd has started), not here.
+echo "== rc.local DDNS hook =="
+if ! grep -q '/data/config/ddns' /etc/rc.local; then
   awk '
     /^exit 0$/ && !done {
-      print "# fastmile: 1restore deletes /data/sysupgrade.tgz after extracting it."
-      print "if [ -f /data/sysupgrade.tgz.real ]; then"
-      print "  cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz"
-      print "fi"
       print "# DDNS uci lives on the overlay. The keeper is /data/config/ddns."
       print "if [ -f /data/config/ddns ]; then"
       print "  cp /data/config/ddns /etc/config/ddns"
@@ -113,7 +112,7 @@ if [ -x /usr/bin/adblock.sh ]; then
   [ -x /usr/libexec/sort-coreutils ] && cp /usr/libexec/sort-coreutils "$STAGE/usr/libexec/sort-coreutils"
   [ -x /usr/bin/sort ] && cp /usr/bin/sort "$STAGE/usr/bin/sort"
 fi
-tar czf /data/sysupgrade.tgz.real -C "$STAGE" .
+sh "$(dirname "$0")/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
 echo "  archive members:"
@@ -130,7 +129,7 @@ Installed.
   DDNS page:  http://192.168.1.1/web_whw/ddns.html
   CGI:        http://192.168.1.1/ddns_uci_web_app.cgi
   Keeper:     /data/sysupgrade.tgz.real
-  Next boot:  1restore applies /data/sysupgrade.tgz, then rc.local copies the keeper back.
+  Next boot:  1restore applies /data/sysupgrade.tgz; rc.local re-arms it once pcd has started.
 
 Revert this boot: cp $WEBROOT/index.html.orig $WEBROOT/index.html
   and rm $WEBROOT/ddns.html $WEBROOT/fm-auth.js $WEBROOT/fm-menu.js $CGI

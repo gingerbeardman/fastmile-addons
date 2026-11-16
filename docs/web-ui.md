@@ -96,9 +96,18 @@ The root filesystem is squashfs with a tmpfs overlay, so anything copied into
 - The installers keep a permanent copy, **`/data/sysupgrade.tgz.real`** (the
   "keeper"), holding every added or patched file plus `/etc/rc.local`.
 - `rc.local` (in the keeper) copies the keeper back to
-  `/data/sysupgrade.tgz` on every boot, so the next boot restores it again.
+  `/data/sysupgrade.tgz` once the boot has finished (`pcd` has started, plus
+  two minutes), so the next boot restores it again. If a boot stalls, nothing
+  is re-armed and a power cycle brings the router back on stock firmware.
   It also restores the UCI configs kept in `/data/config/` (DDNS, adblock)
   and starts the VPN service.
+- Every installer builds the keeper with `keeper-pack.sh`, which packs files
+  and symlinks only. BusyBox `tar` in `1restore` applies each directory
+  entry's mode to the live directory, and a keeper with `./` or `etc/` saved
+  as 750 (root's umask is 027) left `/` and `/etc` unreadable to non-root
+  daemons, so `pcd` never started and the router needed a factory reset.
+  `sh keeper-pack.sh --check /data/sysupgrade.tgz.real` tells you if an
+  existing keeper is affected. Re-run `update-ui.sh` to rebuild it safely.
 - `install.sh` builds the keeper **from scratch**. The other scripts
   (`install-adblock.sh`, `install-speedtest.sh`, `install-agvpn.sh`,
   `update-ui.sh`) unpack the current keeper, add their files and repack it,

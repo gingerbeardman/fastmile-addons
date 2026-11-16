@@ -96,7 +96,7 @@ cp /etc/adblock/adblock.sources.gz /etc/adblock/adblock.blacklist \
   /etc/adblock/adblock.whitelist /etc/adblock/adblock.categories \
   /etc/adblock/adblock.mail "$STAGE/etc/adblock/"
 cp /etc/rc.local "$STAGE/etc/rc.local"
-tar czf /data/sysupgrade.tgz.real -C "$STAGE" .
+sh "$(dirname "$0")/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
 echo "  archive members:"

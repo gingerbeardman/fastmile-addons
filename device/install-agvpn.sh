@@ -43,8 +43,7 @@ cp "$SRC/agvpn/agvpn" /usr/sbin/agvpn
 cp "$SRC/agvpn/agvpn.init" /etc/init.d/agvpn
 chmod 755 /usr/sbin/agvpn /etc/init.d/agvpn
 if [ ! -f "$B/agvpn.conf" ]; then
-	umask 077
-	printf 'ENABLED=0\nLOCATION="fastest"\nSCOPE=devices\nDEVICES=""\n' > "$B/agvpn.conf"
+	(umask 077; printf 'ENABLED=0\nLOCATION="fastest"\nSCOPE=devices\nDEVICES=""\n' > "$B/agvpn.conf")
 fi
 chmod 700 "$B" "$B/data"
 cat "$B/agvpn.conf"
@@ -65,7 +64,7 @@ elif [ ! -f "$B/ipsec-servers" ]; then
 	echo "note: no agvpn/ipsec-servers; IPsec mode stays unavailable (CLI mode works)"
 fi
 if [ -f "$SRC/ipsec.secret" ]; then
-	umask 077; cp "$SRC/ipsec.secret" "$B/ipsec.secret"; rm -f "$SRC/ipsec.secret"
+	(umask 077; cp "$SRC/ipsec.secret" "$B/ipsec.secret"); rm -f "$SRC/ipsec.secret"
 fi
 chmod 600 "$B/ipsec.secret" 2>/dev/null || true
 ls -l "$B"
@@ -101,7 +100,7 @@ if [ -f /tmp/agvpn-sw.list ]; then
 	done < /tmp/agvpn-sw.list
 	rm -f "$STAGE/etc/swanctl/swanctl.conf" /tmp/agvpn-sw.list
 fi
-tar czf /data/sysupgrade.tgz.real -C "$STAGE" .
+sh "$(dirname "$0")/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
 tar tzf /data/sysupgrade.tgz.real | grep -E 'agvpn|rc.local|charon$|swanctl$' 

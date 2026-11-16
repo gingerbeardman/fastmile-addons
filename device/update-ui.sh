@@ -50,9 +50,7 @@ mkdir -p "$STAGE/webs/web_whw"
 for f in $FILES index.html index.html.orig; do
   cp "$WEBROOT/$f" "$STAGE/webs/web_whw/$f"
 done
-tar czf /tmp/fm-ui-keeper.tgz -C "$STAGE" .
-tar tzf /tmp/fm-ui-keeper.tgz >/dev/null
-mv /tmp/fm-ui-keeper.tgz /data/sysupgrade.tgz.real
+sh "$DIR/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
 echo "  archive members:"

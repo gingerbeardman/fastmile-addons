@@ -76,18 +76,18 @@
     mk("div", "fm-sys-v", a, cpu).id = "fmSysCpu";
     mk("div", "fm-sys-cores", a, cpu).id = "fmSysCores";
     mk("div", "fm-sys-s", a, cpu).id = "fmSysCpuS";
+    var up = block("Uptime");
+    mk("div", "fm-sys-v", a, up).id = "fmSysUp";
+    mk("div", "fm-sys-s", a, up).id = "fmSysUpS";
+    var mem = block("Memory");
+    mk("div", "fm-sys-v", a, mem).id = "fmSysMem";
+    mk("div", "fm-sys-bar", a, mem).id = "fmSysMemBar";
+    mk("div", "fm-sys-s", a, mem).id = "fmSysMemS";
     var load = block("Load average");
     load.id = "fmSysLoadB";
     mk("div", "fm-sys-v", a, load).id = "fmSysLoad";
     mk("div", "fm-sys-bar", a, load).id = "fmSysLoadBar";
     mk("div", "fm-sys-s", a, load).id = "fmSysLoadS";
-    var mem = block("Memory");
-    mk("div", "fm-sys-v", a, mem).id = "fmSysMem";
-    mk("div", "fm-sys-bar", a, mem).id = "fmSysMemBar";
-    mk("div", "fm-sys-s", a, mem).id = "fmSysMemS";
-    var up = block("Uptime");
-    mk("div", "fm-sys-v", a, up).id = "fmSysUp";
-    mk("div", "fm-sys-s", a, up).id = "fmSysUpS";
     grid.insertBefore(card, grid.firstChild);
     if (last) render(last); else placeholder();
   }

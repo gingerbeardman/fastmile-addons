@@ -28,7 +28,7 @@ ORIG=$INDEX.orig
 FM_THEME_CSS_V=${FM_THEME_CSS_V:-13}
 FM_THEME_JS_V=${FM_THEME_JS_V:-3}
 FM_MENU_V=${FM_MENU_V:-11}
-FM_SYSINFO_V=${FM_SYSINFO_V:-4}
+FM_SYSINFO_V=${FM_SYSINFO_V:-5}
 FM_MAIN_V=${FM_MAIN_V:-6}
 
 [ -f "$INDEX" ] || { echo "missing $INDEX" >&2; exit 1; }

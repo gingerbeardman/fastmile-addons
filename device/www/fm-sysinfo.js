@@ -77,6 +77,7 @@
     mk("div", "fm-sys-cores", a, cpu).id = "fmSysCores";
     mk("div", "fm-sys-s", a, cpu).id = "fmSysCpuS";
     var load = block("Load average");
+    load.id = "fmSysLoadB";
     mk("div", "fm-sys-v", a, load).id = "fmSysLoad";
     mk("div", "fm-sys-bar", a, load).id = "fmSysLoadBar";
     mk("div", "fm-sys-s", a, load).id = "fmSysLoadS";
@@ -128,11 +129,14 @@
     }
     set("fmSysCpuS", n + " cores · " + d.procs.total + " processes");
 
-    set("fmSysLoad", d.load[0].toFixed(2));
-    // No red here: on this MediaTek board load sits near 8-9 at low CPU, since
-    // kernel threads waiting on the modem hardware count as load.
-    bar("fmSysLoadBar", 100 * d.load[0] / (2 * n), false);
+    // "load" excludes the kernel threads that sit blocked all the time on this
+    // board (load_base of them, about 8), so it is real work against n cores.
+    set("fmSysLoad", d.load[0].toFixed(2) + "<small>/ " + n + "</small>");
+    bar("fmSysLoadBar", 100 * d.load[0] / n, d.load[0] > n);
     set("fmSysLoadS", "5 min " + d.load[1].toFixed(2) + " · 15 min " + d.load[2].toFixed(2));
+    var lb = $("fmSysLoadB");
+    if (lb && d.load_raw) lb.title = "Raw load " + d.load_raw.join(", ") + ", minus " + d.load_base +
+      " kernel threads that are always blocked on this board";
 
     var used = d.mem.total - d.mem.avail, pct = d.mem.total ? 100 * used / d.mem.total : 0;
     set("fmSysMem", pct.toFixed(0) + "<small>%</small>");

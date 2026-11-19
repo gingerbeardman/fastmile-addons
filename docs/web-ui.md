@@ -68,9 +68,14 @@ CPU samples). The page polls every 5 s, only while it is open and the tab is
 visible. The stock **Data Usage** card is hidden there because it repeats the
 Cellular WAN totals.
 
-On the tested unit the load average sits around 8-9 even at about 15% CPU:
-kernel threads waiting on the modem hardware count as load. So the load bar
-never turns red; CPU and memory do at 90%.
+**Load average** is shown as real work against the number of cores, with the
+bar turning red above 1 per core. On the tested unit eight kernel threads sit
+blocked all the time without using CPU: the watchdog kickers (`wdtk-N`, one
+per core), the Wi-Fi/Ethernet offload engine (`wed_taskN`), the modem link
+(`ccci_pollN`) and interrupt polling (`isr_count_polli`). Linux counts each as
+1 load, so raw load never drops below about 8. The CGI counts those threads by
+name on each request and subtracts them; hover the figure for the raw value.
+The CPU and memory bars turn red at 90%.
 
 **Don't read the modem's own CPU/memory through `cfgcli`.** The data model
 has `InternetGatewayDevice.X_ALU-COM_ModemDeviceInfo.ProcessStatus` and

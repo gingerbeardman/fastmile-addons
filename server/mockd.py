@@ -164,7 +164,7 @@ class H(BaseHTTPRequestHandler):
             cores = [round(random.uniform(2, 60), 1) for _ in range(4)]
             tot = 1007652; av = int(tot * random.uniform(0.35, 0.45))
             return self._json({"result": 0, "cpu": {"pct": round(sum(cores) / 4, 1), "cores": cores, "n": 4},
-                "load": [round(random.uniform(0.8, 2.5), 2), 1.42, 1.18], "procs": {"run": 2, "total": 214},
+                "load": [round(random.uniform(0.8, 2.5), 2), 1.42, 1.18], "load_raw": [9.62, 9.42, 9.18], "load_base": 8, "procs": {"run": 2, "total": 214},
                 "mem": {"total": tot, "avail": av, "free": av // 3, "cached": av // 2},
                 "swap": {"total": 0, "free": 0}, "uptime": int(_t.time()) % 400000 + 3600})
 

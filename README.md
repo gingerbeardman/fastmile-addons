@@ -11,6 +11,8 @@ Custom web UI add-ons and services for the **Nokia FastMile 5G Gateway 3.2**:
 - **VPN:** route chosen LAN devices (or the whole home) through AdGuard VPN,
   using either AdGuard's CLI (65 locations) or IPsec/IKEv2 with strongSwan,
   with automatic fallback to the normal connection.
+- **System card:** router CPU, load, memory and uptime at the top of
+  Status → General (from `/proc`), in place of the duplicate Data Usage card.
 - **Speed test fix:** makes Diagnostics → Speed Test work again.
 - **xbar/SwiftBar plugin:** control the VPN from the macOS menu bar.
 

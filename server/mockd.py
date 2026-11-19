@@ -158,6 +158,16 @@ class H(BaseHTTPRequestHandler):
             if not self._sid_valid(): return self._send(401, '{"result":-401,"reason":"login required"}')
             return self._json(AGVPN)
 
+        if path == "/sysinfo_web_app.cgi":         # our /proc CGI: read
+            if not self._sid_valid(): return self._send(401, '{"result":-401,"reason":"login required"}')
+            import random, time as _t
+            cores = [round(random.uniform(2, 60), 1) for _ in range(4)]
+            tot = 1007652; av = int(tot * random.uniform(0.35, 0.45))
+            return self._json({"result": 0, "cpu": {"pct": round(sum(cores) / 4, 1), "cores": cores, "n": 4},
+                "load": [round(random.uniform(0.8, 2.5), 2), 1.42, 1.18], "procs": {"run": 2, "total": 214},
+                "mem": {"total": tot, "avail": av, "free": av // 3, "cached": av // 2},
+                "swap": {"total": 0, "free": 0}, "uptime": int(_t.time()) % 400000 + 3600})
+
         # catch-all for other status CGIs so data-gated UI still renders
         if path.endswith("_web_app.cgi"):
             return self._json({"result": 0})

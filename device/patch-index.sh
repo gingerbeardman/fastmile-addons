@@ -10,14 +10,14 @@
 #   - adds fm-theme.css and fm-theme.js before </head>
 #   - adds jsencrypt.min.js, sjcl.js, crypto_page.js (if not already there)
 #     and fm-auth.js before <app-root>
-#   - adds fm-menu.js after </app-root>
+#   - adds fm-menu.js and fm-sysinfo.js after </app-root>
 #   - replaces the stock <script ... type="module"> tags with the
 #     AUTO-LOGIN HOOK block, which logs in first (if a password is stored in
 #     the browser) and then loads the same modules in order. The module file
 #     names are read from the stock tags, so firmware with other hashes works.
 #
 # Cache busting: bump these when the files change (see docs/web-ui.md).
-#   FM_THEME_CSS_V, FM_THEME_JS_V, FM_MENU_V, FM_MAIN_V (main.*.js; the
+#   FM_THEME_CSS_V, FM_THEME_JS_V, FM_MENU_V, FM_SYSINFO_V, FM_MAIN_V (main.*.js; the
 #   speed test fix patches that bundle, so browsers must refetch it).
 #
 # Revert: cp index.html.orig index.html
@@ -27,7 +27,8 @@ INDEX=${1:-/webs/web_whw/index.html}
 ORIG=$INDEX.orig
 FM_THEME_CSS_V=${FM_THEME_CSS_V:-13}
 FM_THEME_JS_V=${FM_THEME_JS_V:-3}
-FM_MENU_V=${FM_MENU_V:-9}
+FM_MENU_V=${FM_MENU_V:-11}
+FM_SYSINFO_V=${FM_SYSINFO_V:-2}
 FM_MAIN_V=${FM_MAIN_V:-6}
 
 [ -f "$INDEX" ] || { echo "missing $INDEX" >&2; exit 1; }
@@ -63,6 +64,7 @@ trap 'rm -f "$TMP" "$HOOK"' EXIT
 # The hook block, with the module list filled in.
 {
   echo '    <script src="fm-menu.js?v='"$FM_MENU_V"'"></script>'
+  echo '    <script src="fm-sysinfo.js?v='"$FM_SYSINFO_V"'"></script>'
   cat <<'EOF'
     <!-- AUTO-LOGIN HOOK: ensure a session, then boot Angular in order.
          If no stored credential (or login fails), Angular boots normally and

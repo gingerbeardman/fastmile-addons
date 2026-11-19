@@ -69,12 +69,12 @@
      scrolls inside the full sidebar height instead of stopping short */
     ".fm-menu{position:fixed;top:94px;bottom:57px;left:0;width:" + WIDTH + "px;" +
       "overflow-y:auto;overscroll-behavior:contain;padding:0 0 12px;box-sizing:border-box}" +
-    ".fm-mi{display:flex;align-items:center;height:30px;padding-right:12px;" +
+    ".fm-mi{display:flex;align-items:center;height:26px;padding-right:12px;" +
       "font:400 14px/20px -apple-system,BlinkMacSystemFont,Roboto,Arial,sans-serif;" +
       "color:#757575;text-decoration:none;white-space:nowrap;overflow:hidden;" +
       "text-overflow:ellipsis;outline:none}" +
     /* headings (no route): smaller and greyed out, so they read as labels */
-    ".fm-mi.fm-mh{height:26px;font-size:12px;color:#b3b3b3;cursor:default}" +
+    ".fm-mi.fm-mh{height:22px;font-size:12px;color:#b3b3b3;cursor:default}" +
     "a.fm-mi:hover,a.fm-mi:focus{color:#333;background:#ebebeb}" +
     "a.fm-mi.active{font-weight:700;color:#333;background:#ebebeb}" +
     ".fm-mi .fm-dot{width:8px;height:8px;border-radius:50%;flex:0 0 8px;" +

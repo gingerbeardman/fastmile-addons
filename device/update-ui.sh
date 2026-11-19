@@ -5,7 +5,8 @@
 #
 # Only the web files below are replaced, live and in the boot keeper
 # (/data/sysupgrade.tgz.real). Every other keeper member (CGIs, adblock,
-# rc.local, patched main.*.js) is kept as it is.
+# rc.local, patched main.*.js) is kept as it is. The CGIs in CGIS (from cgi/)
+# go to /webs/ the same way.
 #
 # Afterwards it prints the speed test run state (read-only) for debugging.
 
@@ -14,7 +15,8 @@ WEBROOT=/webs/web_whw
 SRC=$(dirname "$0")/www
 STAMP=$(date +%Y%m%d-%H%M%S)
 DIR=$(dirname "$0")
-FILES="fm-menu.js fm-auth.js fm-theme.css fm-theme.js ddns.html adblock.html vpn.html"
+FILES="fm-menu.js fm-auth.js fm-sysinfo.js fm-theme.css fm-theme.js ddns.html adblock.html vpn.html"
+CGIS="sysinfo_web_app.cgi"
 
 [ -f /data/sysupgrade.tgz.real ] || {
   echo "/data/sysupgrade.tgz.real missing; refusing to build a new archive" >&2
@@ -24,11 +26,17 @@ for f in $FILES; do
   [ -f "$SRC/$f" ] || { echo "missing $SRC/$f" >&2; exit 1; }
 done
 [ -f "$DIR/patch-index.sh" ] || { echo "missing $DIR/patch-index.sh" >&2; exit 1; }
+for f in $CGIS; do
+  [ -f "$DIR/cgi/$f" ] || { echo "missing $DIR/cgi/$f" >&2; exit 1; }
+done
 
 echo "== backup to /data/ui-backup-$STAMP =="
 mkdir -p "/data/ui-backup-$STAMP"
 for f in $FILES index.html; do
   [ -f "$WEBROOT/$f" ] && cp -a "$WEBROOT/$f" "/data/ui-backup-$STAMP/$f"
+done
+for f in $CGIS; do
+  [ -f "/webs/$f" ] && cp -a "/webs/$f" "/data/ui-backup-$STAMP/$f"
 done
 cp -a /data/sysupgrade.tgz.real "/data/ui-backup-$STAMP/sysupgrade.tgz.real"
 
@@ -37,6 +45,11 @@ for f in $FILES; do
   cp "$SRC/$f" "$WEBROOT/$f"
   chmod 755 "$WEBROOT/$f"
   echo "  $f"
+done
+for f in $CGIS; do
+  cp "$DIR/cgi/$f" "/webs/$f"
+  chmod 755 "/webs/$f"
+  echo "  /webs/$f"
 done
 # Regenerates index.html from index.html.orig with the current ?v= numbers.
 sh "$DIR/patch-index.sh" "$WEBROOT/index.html"
@@ -50,6 +63,9 @@ mkdir -p "$STAGE/webs/web_whw"
 for f in $FILES index.html index.html.orig; do
   cp "$WEBROOT/$f" "$STAGE/webs/web_whw/$f"
 done
+for f in $CGIS; do
+  cp "/webs/$f" "$STAGE/webs/$f"
+done
 sh "$DIR/keeper-pack.sh" "$STAGE" /data/sysupgrade.tgz.real || exit 1
 cp /data/sysupgrade.tgz.real /data/sysupgrade.tgz
 rm -rf "$STAGE"
@@ -59,7 +75,8 @@ tar tzf /data/sysupgrade.tgz.real
 cat <<EOF
 
 Updated. Reload http://192.168.1.1/web_whw/ (versioned URLs bypass the cache).
-Revert: cp /data/ui-backup-$STAMP/* back into $WEBROOT, and
+Revert: cp the web files in /data/ui-backup-$STAMP back into $WEBROOT and any
+  *_web_app.cgi there back into /webs (if none was saved, delete /webs/$CGIS), and
   cp /data/ui-backup-$STAMP/sysupgrade.tgz.real /data/sysupgrade.tgz.real
 
 EOF

@@ -24,7 +24,7 @@ numbers). It:
 
 - adds `fm-theme.css` and `fm-theme.js` before `</head>`
 - adds `fm-auth.js` (and the stock crypto scripts, if missing) before
-  `<app-root>`, and `fm-menu.js` after it
+  `<app-root>`, and `fm-menu.js` and `fm-sysinfo.js` after it
 - replaces the stock `<script type="module">` tags with an **auto-login
   hook**: if a password is stored in the browser, it logs in first, then loads
   the same Angular modules in order. Without one, Angular boots normally and
@@ -51,6 +51,31 @@ hierarchy is shown only by indentation, in a narrower sidebar.
 - The language picker is hidden.
 - The Overview page's 5G/4G Radio Access panels open once per render; a
   collapse sticks.
+
+## Status → General: System card
+
+`fm-sysinfo.js` puts a **System** card in the first slot of Status → General,
+two columns wide beside eSIM. It shows:
+
+- **CPU:** overall %, a bar per core, and the process count
+- **Load average:** 1, 5 and 15 minutes
+- **Memory:** % used, with used, total and available
+- **Uptime:** and the time of the last boot
+
+The values come from `/webs/sysinfo_web_app.cgi`, which reads `/proc` only and
+checks the browser session like the VPN CGI. Each call takes about 1 s (two
+CPU samples). The page polls every 5 s, only while it is open and the tab is
+visible. The stock **Data Usage** card is hidden there because it repeats the
+Cellular WAN totals.
+
+On the tested unit the load average sits around 8-9 even at about 15% CPU:
+kernel threads waiting on the modem hardware count as load. So the load bar
+never turns red; CPU and memory do at 90%.
+
+**Don't read the modem's own CPU/memory through `cfgcli`.** The data model
+has `InternetGatewayDevice.X_ALU-COM_ModemDeviceInfo.ProcessStatus` and
+`.MemoryStatus`, but reading them on the tested unit ran for minutes and was
+followed by a watchdog reset.
 
 ## Dark theme and zoom
 
@@ -124,7 +149,7 @@ Browsers cache the add-on files aggressively. The pages load them with a
 - in the add-on pages (`ddns.html`, `adblock.html`, `vpn.html`) for the files
   they include, and
 - for `index.html`, through `patch-index.sh`'s variables `FM_THEME_CSS_V`,
-  `FM_THEME_JS_V`, `FM_MENU_V` and `FM_MAIN_V` (the patched `main.*.js`),
+  `FM_THEME_JS_V`, `FM_MENU_V`, `FM_SYSINFO_V` and `FM_MAIN_V` (the patched `main.*.js`),
   then re-run `update-ui.sh`.
 
 ## Speed test fix

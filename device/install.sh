@@ -32,6 +32,7 @@ cp -a /etc/rc.local /data/ddns-ui-backup-$STAMP/rc.local.orig
 echo "== installing custom web files =="
 cp "$SRC/fm-auth.js"  "$WEBROOT/fm-auth.js"
 cp "$SRC/fm-menu.js"  "$WEBROOT/fm-menu.js"
+cp "$SRC/fm-sysinfo.js" "$WEBROOT/fm-sysinfo.js"
 cp "$SRC/fm-theme.js"  "$WEBROOT/fm-theme.js"
 cp "$SRC/fm-theme.css" "$WEBROOT/fm-theme.css"
 cp "$SRC/ddns.html"   "$WEBROOT/ddns.html"
@@ -39,12 +40,13 @@ cp "$SRC/ddns.html"   "$WEBROOT/ddns.html"
 [ -f "$SRC/vpn.html" ] && cp "$SRC/vpn.html" "$WEBROOT/vpn.html"
 sh "$DIR/patch-index.sh" "$WEBROOT/index.html"
 cp "$DIR/cgi/ddns_uci_web_app.cgi" "$CGI"
+cp "$DIR/cgi/sysinfo_web_app.cgi" /webs/sysinfo_web_app.cgi
 if [ -f "$DIR/cgi/adblock_web_app.cgi" ]; then
   cp "$DIR/cgi/adblock_web_app.cgi" /webs/adblock_web_app.cgi
   chmod 755 /webs/adblock_web_app.cgi
 fi
-chmod 755 "$WEBROOT/fm-auth.js" "$WEBROOT/fm-menu.js" "$WEBROOT/ddns.html" \
-  "$WEBROOT/index.html" "$CGI"
+chmod 755 "$WEBROOT/fm-auth.js" "$WEBROOT/fm-menu.js" "$WEBROOT/fm-sysinfo.js" "$WEBROOT/ddns.html" \
+  "$WEBROOT/index.html" "$CGI" /webs/sysinfo_web_app.cgi
 [ -f "$WEBROOT/adblock.html" ] && chmod 755 "$WEBROOT/adblock.html"
 [ -f "$WEBROOT/vpn.html" ] && chmod 755 "$WEBROOT/vpn.html"
 
@@ -74,13 +76,14 @@ echo "== boot archive =="
 STAGE=/tmp/fm-ddns-stage
 rm -rf "$STAGE"
 mkdir -p "$STAGE/webs/web_whw" "$STAGE/etc"
-cp "$WEBROOT/fm-auth.js" "$WEBROOT/fm-menu.js" "$WEBROOT/fm-theme.js" \
+cp "$WEBROOT/fm-auth.js" "$WEBROOT/fm-menu.js" "$WEBROOT/fm-sysinfo.js" "$WEBROOT/fm-theme.js" \
   "$WEBROOT/fm-theme.css" "$WEBROOT/ddns.html" "$WEBROOT/index.html" \
   "$WEBROOT/index.html.orig" "$STAGE/webs/web_whw/"
 mkdir -p "$STAGE/webs/web_whw/assets/i18n"
 cp "$WEBROOT/assets/i18n/en.json" "$WEBROOT/assets/i18n/ja.json" \
   "$STAGE/webs/web_whw/assets/i18n/"
 cp "$CGI" "$STAGE/webs/ddns_uci_web_app.cgi"
+cp /webs/sysinfo_web_app.cgi "$STAGE/webs/sysinfo_web_app.cgi"
 if [ -f /webs/adblock_web_app.cgi ]; then
   cp /webs/adblock_web_app.cgi "$STAGE/webs/adblock_web_app.cgi"
 fi
@@ -132,7 +135,8 @@ Installed.
   Next boot:  1restore applies /data/sysupgrade.tgz; rc.local re-arms it once pcd has started.
 
 Revert this boot: cp $WEBROOT/index.html.orig $WEBROOT/index.html
-  and rm $WEBROOT/ddns.html $WEBROOT/fm-auth.js $WEBROOT/fm-menu.js $CGI
+  and rm $WEBROOT/ddns.html $WEBROOT/fm-auth.js $WEBROOT/fm-menu.js $WEBROOT/fm-sysinfo.js
+  $CGI /webs/sysinfo_web_app.cgi
   A reboot still reapplies the archive until /data/sysupgrade.tgz and
   /data/sysupgrade.tgz.real are removed.
 EOF

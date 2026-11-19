@@ -31,6 +31,8 @@
       "border-radius:2px;transition:height .4s ease}" +
     ".fm-sys .fm-sys-note{text-align:end;font-size:13px;color:#999;font-weight:400;align-self:center}" +
     ".fm-sys .fm-sys-hot i,.fm-sys .fm-sys-hot i b{background:#e5484d}" +
+    ".fm-sys .fm-sys-boots{margin-top:6px;cursor:help}" +
+    ".fm-sys .fm-sys-boots b{font-weight:600;color:#e5484d}" +
     "html.fm-dark .fm-sys .fm-sys-k,html.fm-dark .fm-sys .fm-sys-s," +
       "html.fm-dark .fm-sys .fm-sys-v small{color:#b0b6c2}" +
     "html.fm-dark .fm-sys .fm-sys-v{color:#e6e8ee}" +
@@ -79,6 +81,7 @@
     var up = block("Uptime");
     mk("div", "fm-sys-v", a, up).id = "fmSysUp";
     mk("div", "fm-sys-s", a, up).id = "fmSysUpS";
+    mk("div", "fm-sys-s fm-sys-boots", a, up).id = "fmSysBoots";
     var mem = block("Memory");
     mk("div", "fm-sys-v", a, mem).id = "fmSysMem";
     mk("div", "fm-sys-bar", a, mem).id = "fmSysMemBar";
@@ -104,6 +107,48 @@
   function dur(s) {
     var d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60);
     return d ? d + "d " + h + "h" : h ? h + "h " + m + "m" : m + "m";
+  }
+
+  // Nokia's reboot_history reasons, as words.
+  function why(r1, r2) {
+    if (r1 === "Unknown") return "Unexpected (power cut or crash)";
+    if (r1 === "NormalFactoryReset") return "Factory reset" + (r2 && r2 !== "Unknown" ? " (" + where(r2) + ")" : "");
+    if (r2 === "Watchdog") return "Watchdog reset";
+    return "Restart" + (r2 && r2 !== "Unknown" ? " (" + where(r2) + ")" : "");
+  }
+  function where(r) {
+    return { Web: "web UI", ResetButton: "reset button", Tr069: "TR-069", MobileApp: "mobile app" }[r] || r;
+  }
+  // [["YYYY-MM-DD HH:MM:SS" (UTC), r1, r2], ...] oldest first. One boot can be
+  // logged twice a few seconds apart, so entries within 60 s are merged,
+  // keeping the one with a known reason.
+  function boots(list) {
+    var out = [];
+    (list || []).forEach(function (b) {
+      var t = Date.parse(b[0].replace(" ", "T") + "Z");
+      if (isNaN(t)) return;
+      var prev = out[out.length - 1];
+      if (prev && t - prev.t < 60000) {
+        if (prev.r1 === "Unknown" && b[1] !== "Unknown") { prev.r1 = b[1]; prev.r2 = b[2]; }
+        return;
+      }
+      out.push({ t: t, r1: b[1], r2: b[2] });
+    });
+    return out;
+  }
+  function renderBoots(list) {
+    var e = $("fmSysBoots"); if (!e) return;
+    var all = boots(list), now = Date.now(), day = 86400000;
+    if (!all.length) { e.textContent = ""; e.removeAttribute("title"); return; }
+    var week = all.filter(function (b) { return now - b.t < 7 * day; });
+    var month = all.filter(function (b) { return now - b.t < 30 * day; });
+    var odd = week.filter(function (b) { return b.r1 === "Unknown" || b.r2 === "Watchdog"; }).length;
+    e.innerHTML = "Restarts: " + week.length + " in 7 days · " + month.length + " in 30 days" +
+      (odd ? " · <b>" + odd + " unexpected</b>" : "");
+    e.title = "Most recent restarts (router's reboot history):\n" + all.slice(-10).reverse().map(function (b) {
+      return new Date(b.t).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) +
+        "  " + why(b.r1, b.r2);
+    }).join("\n");
   }
 
   function placeholder() {
@@ -144,6 +189,7 @@
     set("fmSysMemS", mb(used) + " of " + mb(d.mem.total) + " · " + mb(d.mem.avail) + " available");
 
     set("fmSysUp", dur(d.uptime));
+    renderBoots(d.boots);
     var since = new Date(Date.now() - d.uptime * 1000);
     set("fmSysUpS", "since " + since.toLocaleString([], { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }));
   }

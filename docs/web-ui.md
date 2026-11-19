@@ -60,7 +60,8 @@ two columns wide beside eSIM. It shows:
 - **CPU:** overall %, a bar per core, and the process count
 - **Load average:** 1, 5 and 15 minutes
 - **Memory:** % used, with used, total and available
-- **Uptime:** and the time of the last boot
+- **Uptime:** the time of the last boot, and restarts in the last 7 and 30
+  days (hover for the latest ten with their reasons)
 
 The values come from `/webs/sysinfo_web_app.cgi`, which reads `/proc` only and
 checks the browser session like the VPN CGI. Each call takes about 1 s (two
@@ -76,6 +77,13 @@ per core), the Wi-Fi/Ethernet offload engine (`wed_taskN`), the modem link
 1 load, so raw load never drops below about 8. The CGI counts those threads by
 name on each request and subtracts them; hover the figure for the raw value.
 The CPU and memory bars turn red at 90%.
+
+**Restarts** come from the router's own `/configs/reboot_history`, which
+records the last 100 boots with a time (UTC) and a reason: a restart from the
+web UI or reset button, a factory reset, a watchdog reset, or "Unknown" when
+the router went down without saying why (a power cut, hard reset or crash).
+The card counts Unknown and watchdog entries in the last 7 days as
+unexpected. A boot that is logged twice within a minute counts once.
 
 **Don't read the modem's own CPU/memory through `cfgcli`.** The data model
 has `InternetGatewayDevice.X_ALU-COM_ModemDeviceInfo.ProcessStatus` and

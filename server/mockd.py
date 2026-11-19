@@ -166,7 +166,10 @@ class H(BaseHTTPRequestHandler):
             return self._json({"result": 0, "cpu": {"pct": round(sum(cores) / 4, 1), "cores": cores, "n": 4},
                 "load": [round(random.uniform(0.8, 2.5), 2), 1.42, 1.18], "load_raw": [9.62, 9.42, 9.18], "load_base": 8, "procs": {"run": 2, "total": 214},
                 "mem": {"total": tot, "avail": av, "free": av // 3, "cached": av // 2},
-                "swap": {"total": 0, "free": 0}, "uptime": int(_t.time()) % 400000 + 3600})
+                "swap": {"total": 0, "free": 0}, "uptime": int(_t.time()) % 400000 + 3600,
+                "boots": [[_t.strftime("%Y-%m-%d %H:%M:%S", _t.gmtime(_t.time() - h * 3600)), r1, r2]
+                          for h, r1, r2 in ((600, "Reboot", "Web"), (410, "Reboot", "Watchdog"), (200, "Reboot", "Web"),
+                                            (100, "Unknown", "Unknown"), (99.99, "Unknown", "Unknown"), (30, "Unknown", "Unknown"))]})
 
         # catch-all for other status CGIs so data-gated UI still renders
         if path.endswith("_web_app.cgi"):

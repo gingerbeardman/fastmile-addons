@@ -236,7 +236,12 @@
           return fetch("/device_name_status_web_app.cgi", { credentials: "include", cache: "no-store" });
         }
         // Expired (e.g. the Mac slept): log back in as the same user, if stored.
-        if (window.FM && FM.hasCred && FM.hasCred() && FM.relogin) return FM.relogin();
+        // Only from the focused window, so a background window (another
+        // profile or a private window) can't take the single session back.
+        if (window.FM && FM.hasCred && FM.hasCred() && FM.relogin) {
+          if (FM.focused && !FM.focused()) { if (FM.waitFocus) FM.waitFocus(); return; }
+          return FM.relogin();
+        }
       })
       .catch(function () {});
   }

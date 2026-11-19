@@ -201,6 +201,8 @@ class H(BaseHTTPRequestHandler):
             exp_uhash = sha256url(USER, nonce_b64)
             if got_resp == exp_resp and got_uhash == exp_uhash:
                 sid = secrets.token_hex(16); tok = secrets.token_hex(16)
+                if os.environ.get("MOCK_SINGLE"):   # like the router: one web session
+                    SESSIONS.clear()
                 SESSIONS[sid] = {"token": tok, "exp": _time.time() + TTL}
                 _save_sessions()
                 return self._json(

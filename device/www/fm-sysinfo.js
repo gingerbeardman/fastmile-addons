@@ -32,6 +32,7 @@
     ".fm-sys .fm-sys-note{text-align:end;font-size:13px;color:#999;font-weight:400;align-self:center}" +
     ".fm-sys .fm-sys-hot i,.fm-sys .fm-sys-hot i b{background:#e5484d}" +
     ".fm-sys .fm-sys-boots{margin-top:6px;cursor:help}" +
+    ".fm-sys .fm-sys-boots span{white-space:nowrap}" +
     ".fm-sys .fm-sys-boots b{font-weight:600;color:#e5484d}" +
     "html.fm-dark .fm-sys .fm-sys-k,html.fm-dark .fm-sys .fm-sys-s," +
       "html.fm-dark .fm-sys .fm-sys-v small{color:#b0b6c2}" +
@@ -143,8 +144,9 @@
     var week = all.filter(function (b) { return now - b.t < 7 * day; });
     var month = all.filter(function (b) { return now - b.t < 30 * day; });
     var odd = week.filter(function (b) { return b.r1 === "Unknown" || b.r2 === "Watchdog"; }).length;
-    e.innerHTML = "Restarts: " + week.length + " in 7 days · " + month.length + " in 30 days" +
-      (odd ? " · <b>" + odd + " unexpected</b>" : "");
+    // One phrase per line part, so a narrow card breaks between them, not inside.
+    e.innerHTML = "<span>Restarts: " + week.length + " in 7 days</span> · <span>" + month.length + " in 30 days</span>" +
+      (odd ? "<br><b>" + odd + " unexpected in 7 days</b>" : "");
     e.title = "Most recent restarts (router's reboot history):\n" + all.slice(-10).reverse().map(function (b) {
       return new Date(b.t).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) +
         "  " + why(b.r1, b.r2);

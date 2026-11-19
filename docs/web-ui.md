@@ -121,6 +121,11 @@ allows **one session at a time**: a new login ends the previous one.
   dialog after the computer sleeps. Network errors on that poll are ignored,
   since Wi-Fi often takes a few seconds to come back after wake. The
   keep-alive also re-logs in on tab focus.
+- **Only the focused window re-logs in.** Two windows with separate cookies
+  (a private window, another browser profile, a Dock web app) used to take
+  the single session from each other every 10 s. A background window now
+  holds the "expired" answer back and logs in again when it gets focus. Run
+  the mock with `MOCK_SINGLE=1` to get the router's one-session behaviour.
 - **Limits:** the tab has to stay open. Any other tool that logs in (for
   example `client/fm.py`) logs the browser out.
 
@@ -162,7 +167,7 @@ Browsers cache the add-on files aggressively. The pages load them with a
 - in the add-on pages (`ddns.html`, `adblock.html`, `vpn.html`) for the files
   they include, and
 - for `index.html`, through `patch-index.sh`'s variables `FM_THEME_CSS_V`,
-  `FM_THEME_JS_V`, `FM_MENU_V`, `FM_SYSINFO_V` and `FM_MAIN_V` (the patched `main.*.js`),
+  `FM_THEME_JS_V`, `FM_AUTH_V`, `FM_MENU_V`, `FM_SYSINFO_V` and `FM_MAIN_V` (the patched `main.*.js`),
   then re-run `update-ui.sh`.
 
 ## Speed test fix

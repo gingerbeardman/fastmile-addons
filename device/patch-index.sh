@@ -17,7 +17,7 @@
 #     names are read from the stock tags, so firmware with other hashes works.
 #
 # Cache busting: bump these when the files change (see docs/web-ui.md).
-#   FM_THEME_CSS_V, FM_THEME_JS_V, FM_MENU_V, FM_SYSINFO_V, FM_MAIN_V (main.*.js; the
+#   FM_THEME_CSS_V, FM_THEME_JS_V, FM_AUTH_V, FM_MENU_V, FM_SYSINFO_V, FM_MAIN_V (main.*.js; the
 #   speed test fix patches that bundle, so browsers must refetch it).
 #
 # Revert: cp index.html.orig index.html
@@ -27,8 +27,9 @@ INDEX=${1:-/webs/web_whw/index.html}
 ORIG=$INDEX.orig
 FM_THEME_CSS_V=${FM_THEME_CSS_V:-13}
 FM_THEME_JS_V=${FM_THEME_JS_V:-3}
-FM_MENU_V=${FM_MENU_V:-11}
-FM_SYSINFO_V=${FM_SYSINFO_V:-6}
+FM_AUTH_V=${FM_AUTH_V:-2}
+FM_MENU_V=${FM_MENU_V:-12}
+FM_SYSINFO_V=${FM_SYSINFO_V:-7}
 FM_MAIN_V=${FM_MAIN_V:-6}
 
 [ -f "$INDEX" ] || { echo "missing $INDEX" >&2; exit 1; }
@@ -113,7 +114,7 @@ grep -q 'assets/js/jsencrypt.min.js' "$ORIG" && HAS_JSE=1
 grep -q 'assets/js/sjcl.js' "$ORIG" && HAS_SJCL=1
 grep -q 'assets/js/crypto_page.js' "$ORIG" && HAS_CRYPTO=1
 
-awk -v hook="$HOOK" -v cssv="$FM_THEME_CSS_V" -v jsv="$FM_THEME_JS_V" \
+awk -v hook="$HOOK" -v cssv="$FM_THEME_CSS_V" -v jsv="$FM_THEME_JS_V" -v authv="$FM_AUTH_V" \
     -v jse="$HAS_JSE" -v sjcl="$HAS_SJCL" -v cr="$HAS_CRYPTO" '
   {
     line = $0
@@ -136,7 +137,7 @@ awk -v hook="$HOOK" -v cssv="$FM_THEME_CSS_V" -v jsv="$FM_THEME_JS_V" \
       if (!jse)  print ind "<script src=\"assets/js/jsencrypt.min.js\"></script>"
       if (!sjcl) print ind "<script src=\"assets/js/sjcl.js\"></script>"
       if (!cr)   print ind "<script src=\"assets/js/crypto_page.js\"></script>"
-      print ind "<script src=\"fm-auth.js\"></script>"
+      print ind "<script src=\"fm-auth.js?v=" authv "\"></script>"
       print line
       if (line ~ /<\/app-root>/) {
         while ((getline h < hook) > 0) print h

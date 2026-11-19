@@ -16,6 +16,12 @@
  * stored, that response is held back, a silent re-login is done, and the app
  * sees a fresh check_expire result instead.
  *
+ * Only the focused window re-logs in. The router allows one web session, and
+ * two windows with separate cookies (a private window, another profile, a
+ * Dock web app) used to take it from each other every 10 s. A window in the
+ * background now holds the "expired" answer back and logs in again when it
+ * gets focus.
+ *
  * Exposes window.FM:
  *   FM.ensure()        -> Promise, guarantees a live session (auto-login)
  *   FM.login(pw[,user])-> Promise<bool>, explicit login, stores user+pw on success
@@ -166,6 +172,15 @@
     document.addEventListener("keydown", grab, true);
   }
 
+  // Re-login waiting for this window to get focus (see the header).
+  var pendingFocus = false;
+  function focused() { try { return document.hasFocus(); } catch (e) { return true; } }
+  window.addEventListener("focus", function () {
+    if (!pendingFocus) return;
+    pendingFocus = false;
+    relogin();
+  });
+
   // Hold back an "expired" check_expire answer from the stock app, re-login,
   // and hand it a fresh answer. Network errors on that poll (common for a few
   // seconds after wake) are swallowed rather than treated as a logout.
@@ -190,6 +205,10 @@
           var txt = "";
           try { txt = x.responseText; } catch (e) {}
           if (!/"expired"\s*:\s*"(yes|unknown)"/.test(txt)) return orig.call(x, ev);
+          // Another window may hold the session: don't take it back from
+          // the background. Swallow the answer (the app stays put; the next
+          // 10 s poll asks again) and re-login once this window has focus.
+          if (!focused()) { pendingFocus = true; return; }
           relogin().then(function (ok) {
             if (!ok) return orig.call(x, ev);
             return fetch("/check_expire_web_app.cgi", { credentials: "include", cache: "no-store" })
@@ -207,6 +226,7 @@
   window.FM = {
     USER: getUser(), login: login, ensure: ensure, relogin: relogin, get: get, post: post,
     forget: forget, hasCred: function () { return !!getPw(); },
+    focused: focused, waitFocus: function () { pendingFocus = true; },
     setCred: setPw
   };
 })();
